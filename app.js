@@ -307,7 +307,14 @@ function setupEventListeners() {
 
     if (btnNewTx) btnNewTx.onclick = () => modalTx.classList.add('active');
     if (btnAddMember) btnAddMember.onclick = () => modalMem.classList.add('active');
-    if (btnNewExp) btnNewExp.onclick = () => modalExp.classList.add('active');
+    if (btnNewExp) btnNewExp.onclick = () => {
+        modalExp.classList.add('active');
+        const expDesc = document.getElementById('expDesc');
+        if (expDesc) {
+            const count = appData.expenses.length;
+            expDesc.value = `Pembayaran ke-${count + 1}`;
+        }
+    };
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = () => {
@@ -425,8 +432,14 @@ function setupEventListeners() {
             const data = {
                 date: document.getElementById('expDate').value,
                 amount: document.getElementById('expAmount').value,
-                description: document.getElementById('expDesc').value
+                description: document.getElementById('expDesc').value.trim()
             };
+
+            // Fallback description
+            if (!data.description) {
+                const count = appData.expenses.length;
+                data.description = `Pembayaran ke-${count + 1}`;
+            }
 
             // Validation: Spending must be <= Balance
             if (Number(data.amount) > appData.stats.netBalance) {
