@@ -295,6 +295,11 @@ function setupEventListeners() {
     if (btnAddMember) btnAddMember.onclick = () => modalMem.classList.add('active');
     if (btnNewExp) btnNewExp.onclick = () => modalExp.classList.add('active');
 
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.onclick = () => {
+            if (modalTx) modalTx.classList.remove('active');
+            if (modalMem) modalMem.classList.remove('active');
+            if (modalExp) modalExp.classList.remove('active');
         };
     });
 
