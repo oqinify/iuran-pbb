@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1.7">
+    <link rel="stylesheet" href="style.css?v=1.8">
 </head>
 <body class="dark-theme">
     <div class="app-container">
@@ -291,8 +291,8 @@
                         <textarea id="txDesc" rows="3" placeholder="Misal: Iuran bulan Mei"></textarea>
                     </div>
                     <div class="form-group full-width">
-                        <label>Bukti Bayar (Opsional)</label>
-                        <input type="file" id="txFile" accept="image/*,.pdf">
+                        <label>Bukti Bayar</label>
+                        <input type="file" id="txFile" accept="image/*,.pdf" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Transaksi</button>
@@ -357,8 +357,8 @@
                         <input type="text" id="expDesc" placeholder="Contoh: Beli snack sore">
                     </div>
                     <div class="form-group">
-                        <label>Bukti Bayar (Opsional)</label>
-                        <input type="file" id="expFile" accept="image/*,.pdf">
+                        <label>Bukti Bayar</label>
+                        <input type="file" id="expFile" accept="image/*,.pdf" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Belanja</button>
@@ -377,6 +377,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.7"></script>
+    <script src="app.js?v=1.8"></script>
 </body>
 </html>

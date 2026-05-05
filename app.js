@@ -295,13 +295,20 @@ function setupEventListeners() {
     if (btnAddMember) btnAddMember.onclick = () => modalMem.classList.add('active');
     if (btnNewExp) btnNewExp.onclick = () => modalExp.classList.add('active');
 
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.onclick = () => {
-            if (modalTx) modalTx.classList.remove('active');
-            if (modalMem) modalMem.classList.remove('active');
-            if (modalExp) modalExp.classList.remove('active');
         };
     });
+
+    // Auto-fill Description based on member's payment sequence
+    const selectMember = document.getElementById('selectMember');
+    if (selectMember) {
+        selectMember.addEventListener('change', () => {
+            const memberId = selectMember.value;
+            if (!memberId) return;
+            const count = appData.transactions.filter(t => t.MemberID === memberId).length;
+            const descInput = document.getElementById('txDesc');
+            if (descInput) descInput.value = `Pembayaran ke-${count + 1}`;
+        });
+    }
 
     // Form Submissions
     const formTx = document.getElementById('formTransaction');
@@ -315,8 +322,14 @@ function setupEventListeners() {
                 memberId: document.getElementById('selectMember').value,
                 date: document.getElementById('txDate').value,
                 amount: document.getElementById('txAmount').value,
-                description: document.getElementById('txDesc').value
+                description: document.getElementById('txDesc').value.trim()
             };
+
+            // Fallback description
+            if (!data.description) {
+                const count = appData.transactions.filter(t => t.MemberID === data.memberId).length;
+                data.description = `Pembayaran ke-${count + 1}`;
+            }
 
             const fileInput = document.getElementById('txFile');
 
@@ -393,6 +406,12 @@ function setupEventListeners() {
                 amount: document.getElementById('expAmount').value,
                 description: document.getElementById('expDesc').value
             };
+
+            // Validation: Spending must be <= Balance
+            if (Number(data.amount) > appData.stats.netBalance) {
+                showToast('Saldo Kas tidak mencukupi! (Sisa: ' + formatIDR(appData.stats.netBalance) + ')', 'error');
+                return;
+            }
 
             const fileInput = document.getElementById('expFile');
 
