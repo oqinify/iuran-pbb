@@ -226,10 +226,13 @@ function setupEventListeners() {
 
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', (e) => {
+        const isClickInsideSidebar = sidebar.contains(e.target);
+        const isClickOnToggle = btnToggle && btnToggle.contains(e.target);
+        
         if (window.innerWidth <= 1024 && 
             sidebar.classList.contains('active') && 
-            !sidebar.contains(e.target) && 
-            e.target !== btnToggle) {
+            !isClickInsideSidebar && 
+            !isClickOnToggle) {
             sidebar.classList.remove('active');
         }
     });
