@@ -351,9 +351,14 @@ function showToast(msg, type = 'success') {
 }
 
 function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+    
     if (show) {
+        overlay.classList.add('active');
         document.body.style.cursor = 'wait';
     } else {
+        overlay.classList.remove('active');
         document.body.style.cursor = 'default';
     }
 }
