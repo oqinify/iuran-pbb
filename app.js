@@ -30,24 +30,30 @@ function initSettingsView() {
 
 async function checkConnection() {
     const statusEl = document.getElementById('connectionStatus');
+    const versionEl = document.getElementById('serverVersion');
     if (!statusEl) return;
     
     if (CONFIG.IS_GAS_ENV && !CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung via GAS Environment';
+        if (versionEl) versionEl.textContent = 'Mode Native GAS';
         return;
     }
     
     if (!CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning)"></i> API URL Belum Diatur';
+        if (versionEl) versionEl.textContent = 'API Tidak Terhubung';
         return;
     }
 
     try {
         statusEl.textContent = 'Menghubungkan...';
-        await callApi('getDashboardData');
-        statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung ke API';
+        const data = await callApi('getDashboardData');
+        const ver = data.version || '1.0.0';
+        statusEl.innerHTML = `<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung (v${ver})`;
+        if (versionEl) versionEl.textContent = 'Server Version: ' + ver;
     } catch (err) {
         statusEl.innerHTML = '<i class="fas fa-times-circle" style="color: var(--accent-error)"></i> Koneksi Gagal';
+        if (versionEl) versionEl.textContent = 'Koneksi Terputus';
     }
 }
 

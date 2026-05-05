@@ -10,6 +10,7 @@ const SHEETS = {
   EXPENSES: 'Expenses'
 };
 
+const VERSION = "1.8.0"; // Backend Version
 const DRIVE_FOLDER_NAME = "Iuran_Attachments";
 
 function doGet(e) {
@@ -116,6 +117,7 @@ function getDashboardData() {
   const totalExpense = exps.reduce((sum, e) => sum + (Number(e.Amount) || 0), 0);
   
   return {
+    version: VERSION,
     stats: {
       totalMembers: members.length,
       totalQuota: totalQuota,
