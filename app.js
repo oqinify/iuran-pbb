@@ -272,14 +272,17 @@ function setupEventListeners() {
                 description: document.getElementById('txDesc').value
             };
 
+            showLoading(true);
             try {
                 const res = await callApi('addTransaction', data);
                 showToast(res.message || 'Transaksi berhasil');
                 modalTx.classList.remove('active');
-                fetchInitialData(); // Refresh
+                await fetchInitialData(); // Wait for data refresh
                 e.target.reset();
             } catch (err) {
                 showToast('Gagal menyimpan transaksi: ' + err, 'error');
+            } finally {
+                showLoading(false);
             }
         };
     }
@@ -294,14 +297,17 @@ function setupEventListeners() {
                 quota: document.getElementById('memQuota').value
             };
 
+            showLoading(true);
             try {
                 const res = await callApi('addMember', data);
                 showToast('Anggota berhasil didaftarkan');
                 modalMem.classList.remove('active');
-                fetchMembers();
+                await fetchMembers(); // Wait for list refresh
                 e.target.reset();
             } catch (err) {
                 showToast('Gagal mendaftarkan anggota: ' + err, 'error');
+            } finally {
+                showLoading(false);
             }
         };
     }
