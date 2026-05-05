@@ -64,12 +64,17 @@ async function callApi(action, data = {}) {
                 .withFailureHandler(reject)[action](data);
         });
     } else {
-        // Use Fetch API for external hosting
-        if (!CONFIG.API_URL) {
-            console.error('API_URL is not set for external hosting!');
-            return;
-        }
+        if (!CONFIG.API_URL) return;
         
+        if (action === 'uploadFile') {
+            // Use POST for file uploads
+            const response = await fetch(CONFIG.API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action, data })
+            });
+            return await response.json();
+        }
+
         const params = new URLSearchParams({ action, ...data });
         const response = await fetch(`${CONFIG.API_URL}?${params.toString()}`);
         return await response.json();
@@ -191,13 +196,14 @@ function renderAllTransactions() {
     
     appData.transactions.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
+        const attachment = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Lihat Bukti"><i class="fas fa-paperclip"></i></a>` : '';
         const row = `
             <tr>
                 <td>${tx.ID}</td>
                 <td>${formatDate(tx.Date)}</td>
                 <td>${member.Name}</td>
                 <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'}</td>
+                <td>${tx.Description || '-'} ${attachment}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -210,13 +216,13 @@ function renderAllExpenses() {
     tbody.innerHTML = '';
     
     appData.expenses.forEach(exp => {
+        const attachment = exp.Attachment ? `<a href="${exp.Attachment}" target="_blank" title="Lihat Bukti"><i class="fas fa-paperclip"></i></a>` : '';
         const row = `
             <tr>
                 <td>${exp.ID}</td>
                 <td>${formatDate(exp.Date)}</td>
-                <td>${exp.Category}</td>
                 <td>${formatIDR(exp.Amount)}</td>
-                <td>${exp.Description || '-'}</td>
+                <td>${exp.Description || '-'} ${attachment}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -312,10 +318,20 @@ function setupEventListeners() {
                 description: document.getElementById('txDesc').value
             };
 
+            const fileInput = document.getElementById('txFile');
+
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
+
+                // Handle File Upload
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const base64 = await toBase64(file);
+                    const uploadRes = await callApi('uploadFile', { base64, name: file.name });
+                    if (uploadRes.success) data.attachmentUrl = uploadRes.url;
+                }
 
                 const res = await callApi('addTransaction', data);
                 showToast(res.message || 'Transaksi berhasil');
@@ -375,14 +391,23 @@ function setupEventListeners() {
             const data = {
                 date: document.getElementById('expDate').value,
                 amount: document.getElementById('expAmount').value,
-                category: document.getElementById('expCategory').value,
                 description: document.getElementById('expDesc').value
             };
+
+            const fileInput = document.getElementById('expFile');
 
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
+
+                // Handle File Upload
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const base64 = await toBase64(file);
+                    const uploadRes = await callApi('uploadFile', { base64, name: file.name });
+                    if (uploadRes.success) data.attachmentUrl = uploadRes.url;
+                }
 
                 const res = await callApi('addExpense', data);
                 showToast(res.message || 'Belanja berhasil dicatat');
@@ -439,6 +464,15 @@ function formatDate(dateStr) {
         day: '2-digit', 
         month: 'short', 
         year: 'numeric' 
+    });
+}
+
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
     });
 }
 

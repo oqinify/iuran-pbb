@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1.6">
+    <link rel="stylesheet" href="style.css?v=1.7">
 </head>
 <body class="dark-theme">
     <div class="app-container">
@@ -290,6 +290,10 @@
                         <label>Keterangan</label>
                         <textarea id="txDesc" rows="3" placeholder="Misal: Iuran bulan Mei"></textarea>
                     </div>
+                    <div class="form-group full-width">
+                        <label>Bukti Bayar (Opsional)</label>
+                        <input type="file" id="txFile" accept="image/*,.pdf">
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Transaksi</button>
             </form>
@@ -349,18 +353,12 @@
                         <input type="number" id="expAmount" placeholder="Contoh: 50000" required>
                     </div>
                     <div class="form-group">
-                        <label>Kategori</label>
-                        <select id="expCategory" required>
-                            <option value="Konsumsi">Konsumsi</option>
-                            <option value="ATK">ATK</option>
-                            <option value="Kebersihan">Kebersihan</option>
-                            <option value="Operasional">Operasional</option>
-                            <option value="Lain-lain">Lain-lain</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label>Keterangan</label>
                         <input type="text" id="expDesc" placeholder="Contoh: Beli snack sore">
+                    </div>
+                    <div class="form-group">
+                        <label>Bukti Bayar (Opsional)</label>
+                        <input type="file" id="expFile" accept="image/*,.pdf">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Belanja</button>
@@ -379,6 +377,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.6"></script>
+    <script src="app.js?v=1.7"></script>
 </body>
 </html>
