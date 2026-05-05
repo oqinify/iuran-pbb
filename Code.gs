@@ -200,6 +200,7 @@ function deleteTransaction(p) {
   const data = sheetTx.getDataRange().getValues();
   const headers = data[0];
   const idCol = headers.indexOf('ID');
+  const attCol = headers.indexOf('Attachment');
   
   let txAmount = 0, txMemberId = '';
   
@@ -207,7 +208,10 @@ function deleteTransaction(p) {
     if (data[i][idCol] === p.id) {
       txAmount = Number(data[i][headers.indexOf('Amount')]) || 0;
       txMemberId = data[i][headers.indexOf('MemberID')];
+      const attachmentUrl = data[i][attCol];
+      
       sheetTx.deleteRow(i + 1);
+      if (attachmentUrl) deleteFileByUrl(attachmentUrl);
       
       // Update Member Balance
       const memData = sheetMem.getDataRange().getValues();
@@ -274,10 +278,15 @@ function editTransaction(p) {
 function deleteExpense(p) {
   const sheet = SS.getSheetByName(SHEETS.EXPENSES);
   const data = sheet.getDataRange().getValues();
-  const idCol = data[0].indexOf('ID');
+  const headers = data[0];
+  const idCol = headers.indexOf('ID');
+  const attCol = headers.indexOf('Attachment');
+  
   for (let i = 1; i < data.length; i++) {
     if (data[i][idCol] === p.id) {
+      const attachmentUrl = data[i][attCol];
       sheet.deleteRow(i + 1);
+      if (attachmentUrl) deleteFileByUrl(attachmentUrl);
       return { success: true, message: 'Belanja dihapus' };
     }
   }
@@ -299,4 +308,16 @@ function editExpense(p) {
     }
   }
   return { error: 'Not found' };
+}
+
+function deleteFileByUrl(url) {
+  if (!url) return;
+  try {
+    const match = url.match(/[-\w]{25,}/);
+    if (match && match[0]) {
+      DriveApp.getFileById(match[0]).setTrashed(true);
+    }
+  } catch (err) {
+    // Ignore if file doesn't exist or no permission
+  }
 }
