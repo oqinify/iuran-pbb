@@ -224,24 +224,22 @@ function setupEventListeners() {
         });
     }
 
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-        const isClickInsideSidebar = sidebar.contains(e.target);
-        const isClickOnToggle = btnToggle && btnToggle.contains(e.target);
-        
-        if (window.innerWidth <= 1024 && 
-            sidebar.classList.contains('active') && 
-            !isClickInsideSidebar && 
-            !isClickOnToggle) {
+    // Sidebar Overlay Click (Close sidebar)
+    const overlay = document.getElementById('sidebarOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', () => {
             sidebar.classList.remove('active');
-        }
-    });
+        });
+    }
 
     // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             switchView(item.dataset.view);
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.remove('active');
+            }
         });
     });
 

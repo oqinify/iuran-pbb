@@ -588,3 +588,22 @@ td:last-child { border-radius: 0 12px 12px 0; }
         grid-template-columns: 1fr;
     }
 }
+
+/* Sidebar Overlay - Robust Close mechanism */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 950;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    .sidebar.active ~ .sidebar-overlay {
+        display: block;
+        opacity: 1;
+    }
+}
