@@ -276,6 +276,13 @@ td:last-child { border-radius: 0 12px 12px 0; }
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
 .modal-header h3 {
     font-size: 24px;
     font-weight: 700;
