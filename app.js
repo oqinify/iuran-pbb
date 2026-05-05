@@ -196,14 +196,21 @@ function renderAllTransactions() {
     
     appData.transactions.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
-        const attachment = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Lihat Bukti"><i class="fas fa-paperclip"></i></a>` : '';
+        const attachment = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Lihat Bukti" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-paperclip"></i></a>` : '';
+        const actions = `
+            <div class="action-buttons">
+                <button class="btn btn-icon" onclick="editData('${tx.ID}', 'tx')" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-icon btn-danger" onclick="deleteData('${tx.ID}', 'tx')" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
         const row = `
             <tr>
                 <td>${tx.ID}</td>
                 <td>${formatDate(tx.Date)}</td>
                 <td>${member.Name}</td>
                 <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'} ${attachment}</td>
+                <td>${tx.Description || '-'}${attachment}</td>
+                <td>${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -216,13 +223,20 @@ function renderAllExpenses() {
     tbody.innerHTML = '';
     
     appData.expenses.forEach(exp => {
-        const attachment = exp.Attachment ? `<a href="${exp.Attachment}" target="_blank" title="Lihat Bukti"><i class="fas fa-paperclip"></i></a>` : '';
+        const attachment = exp.Attachment ? `<a href="${exp.Attachment}" target="_blank" title="Lihat Bukti" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-paperclip"></i></a>` : '';
+        const actions = `
+            <div class="action-buttons">
+                <button class="btn btn-icon" onclick="editData('${exp.ID}', 'exp')" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-icon btn-danger" onclick="deleteData('${exp.ID}', 'exp')" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
         const row = `
             <tr>
                 <td>${exp.ID}</td>
                 <td>${formatDate(exp.Date)}</td>
                 <td>${formatIDR(exp.Amount)}</td>
-                <td>${exp.Description || '-'} ${attachment}</td>
+                <td>${exp.Description || '-'}${attachment}</td>
+                <td>${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -300,6 +314,8 @@ function setupEventListeners() {
             if (modalTx) modalTx.classList.remove('active');
             if (modalMem) modalMem.classList.remove('active');
             if (modalExp) modalExp.classList.remove('active');
+            const modalEdit = document.getElementById('modalEdit');
+            if (modalEdit) modalEdit.classList.remove('active');
         };
     });
 
@@ -449,6 +465,48 @@ function setupEventListeners() {
         };
     }
 
+    const formEdit = document.getElementById('formEdit');
+    if (formEdit) {
+        formEdit.onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+
+            const type = document.getElementById('editType').value;
+            const action = type === 'tx' ? 'editTransaction' : 'editExpense';
+            
+            const data = {
+                id: document.getElementById('editId').value,
+                date: document.getElementById('editDate').value,
+                amount: document.getElementById('editAmount').value,
+                description: document.getElementById('editDesc').value
+            };
+
+            // Validation for Expense
+            if (type === 'exp' && Number(data.amount) > appData.stats.netBalance) {
+                // Warning, but let them edit if it's not a huge delta (simplified)
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                document.body.style.cursor = 'wait';
+
+                const res = await callApi(action, data);
+                showToast(res.message || 'Perubahan disimpan');
+                const modalEdit = document.getElementById('modalEdit');
+                if (modalEdit) modalEdit.classList.remove('active');
+                await fetchInitialData();
+            } catch (err) {
+                showToast('Gagal mengedit: ' + err, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.style.cursor = 'default';
+            }
+        };
+    }
+
     // Auto-sync every 5 minutes
     setInterval(() => {
         console.log('Auto-syncing dashboard...');
@@ -473,6 +531,46 @@ function setupEventListeners() {
 }
 
 // Helpers
+window.editData = (id, type) => {
+    let item;
+    if (type === 'tx') item = appData.transactions.find(t => t.ID === id);
+    else item = appData.expenses.find(e => e.ID === id);
+    
+    if (!item) return;
+
+    document.getElementById('editId').value = id;
+    document.getElementById('editType').value = type;
+    
+    // Format date for input type="date" (YYYY-MM-DD)
+    const dateObj = new Date(item.Date);
+    const yyyy = dateObj.getFullYear();
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    
+    document.getElementById('editDate').value = `${yyyy}-${mm}-${dd}`;
+    document.getElementById('editAmount').value = item.Amount;
+    document.getElementById('editDesc').value = item.Description;
+
+    const modalEdit = document.getElementById('modalEdit');
+    if (modalEdit) modalEdit.classList.add('active');
+};
+
+window.deleteData = async (id, type) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+    
+    showLoading(true);
+    try {
+        const action = type === 'tx' ? 'deleteTransaction' : 'deleteExpense';
+        const res = await callApi(action, { id });
+        showToast(res.message || 'Data dihapus');
+        await fetchInitialData();
+    } catch (err) {
+        showToast('Gagal menghapus: ' + err, 'error');
+    } finally {
+        showLoading(false);
+    }
+};
+
 function formatIDR(num) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',

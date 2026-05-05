@@ -46,6 +46,10 @@ function handleApiRequest(e) {
       case 'addExpense': response = addExpense(params); break;
       case 'addMember': response = addMember(params); break;
       case 'uploadFile': response = uploadFile(params); break;
+      case 'deleteTransaction': response = deleteTransaction(params); break;
+      case 'editTransaction': response = editTransaction(params); break;
+      case 'deleteExpense': response = deleteExpense(params); break;
+      case 'editExpense': response = editExpense(params); break;
       default: response = { error: 'Action not found' };
     }
   } catch (err) {
@@ -188,4 +192,111 @@ function addMember(p) {
   const id = 'MEM-' + Utilities.formatDate(new Date(), "GMT+7", "HHmmss");
   sheet.appendRow([id, p.name, p.department, p.quota, 0, p.quota]);
   return { success: true, id: id };
+}
+
+function deleteTransaction(p) {
+  const sheetTx = SS.getSheetByName(SHEETS.TRANSACTIONS);
+  const sheetMem = SS.getSheetByName(SHEETS.MEMBERS);
+  const data = sheetTx.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('ID');
+  
+  let txAmount = 0, txMemberId = '';
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] === p.id) {
+      txAmount = Number(data[i][headers.indexOf('Amount')]) || 0;
+      txMemberId = data[i][headers.indexOf('MemberID')];
+      sheetTx.deleteRow(i + 1);
+      
+      // Update Member Balance
+      const memData = sheetMem.getDataRange().getValues();
+      const mHeaders = memData[0];
+      for (let j = 1; j < memData.length; j++) {
+        if (memData[j][mHeaders.indexOf('ID')] === txMemberId) {
+          const uCol = mHeaders.indexOf('UsedAmount');
+          const bCol = mHeaders.indexOf('Balance');
+          const curUsed = Number(memData[j][uCol]) || 0;
+          const q = Number(memData[j][mHeaders.indexOf('TotalQuota')]) || 0;
+          const newUsed = Math.max(0, curUsed - txAmount);
+          sheetMem.getRange(j + 1, uCol + 1).setValue(newUsed);
+          sheetMem.getRange(j + 1, bCol + 1).setValue(q - newUsed);
+          break;
+        }
+      }
+      return { success: true, message: 'Transaksi dihapus' };
+    }
+  }
+  return { error: 'Not found' };
+}
+
+function editTransaction(p) {
+  const sheetTx = SS.getSheetByName(SHEETS.TRANSACTIONS);
+  const sheetMem = SS.getSheetByName(SHEETS.MEMBERS);
+  const data = sheetTx.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('ID');
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] === p.id) {
+      const oldAmount = Number(data[i][headers.indexOf('Amount')]) || 0;
+      const txMemberId = data[i][headers.indexOf('MemberID')];
+      const newAmount = Number(p.amount) || 0;
+      
+      // Update Tx Row (Date, Amount, Desc) - Assume columns: ID, MemberID, Date, Amount, Description, Attachment, Timestamp
+      sheetTx.getRange(i + 1, headers.indexOf('Date') + 1).setValue(p.date);
+      sheetTx.getRange(i + 1, headers.indexOf('Amount') + 1).setValue(newAmount);
+      sheetTx.getRange(i + 1, headers.indexOf('Description') + 1).setValue(p.description);
+      
+      // Update Member Balance
+      if (oldAmount !== newAmount) {
+        const memData = sheetMem.getDataRange().getValues();
+        const mHeaders = memData[0];
+        for (let j = 1; j < memData.length; j++) {
+          if (memData[j][mHeaders.indexOf('ID')] === txMemberId) {
+            const uCol = mHeaders.indexOf('UsedAmount');
+            const bCol = mHeaders.indexOf('Balance');
+            const curUsed = Number(memData[j][uCol]) || 0;
+            const q = Number(memData[j][mHeaders.indexOf('TotalQuota')]) || 0;
+            const newUsed = Math.max(0, curUsed - oldAmount + newAmount);
+            sheetMem.getRange(j + 1, uCol + 1).setValue(newUsed);
+            sheetMem.getRange(j + 1, bCol + 1).setValue(q - newUsed);
+            break;
+          }
+        }
+      }
+      return { success: true, message: 'Transaksi diperbarui' };
+    }
+  }
+  return { error: 'Not found' };
+}
+
+function deleteExpense(p) {
+  const sheet = SS.getSheetByName(SHEETS.EXPENSES);
+  const data = sheet.getDataRange().getValues();
+  const idCol = data[0].indexOf('ID');
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] === p.id) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: 'Belanja dihapus' };
+    }
+  }
+  return { error: 'Not found' };
+}
+
+function editExpense(p) {
+  const sheet = SS.getSheetByName(SHEETS.EXPENSES);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('ID');
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] === p.id) {
+      // Columns: ID, Date, Amount, Description, Attachment, Timestamp
+      sheet.getRange(i + 1, headers.indexOf('Date') + 1).setValue(p.date);
+      sheet.getRange(i + 1, headers.indexOf('Amount') + 1).setValue(p.amount);
+      sheet.getRange(i + 1, headers.indexOf('Description') + 1).setValue(p.description);
+      return { success: true, message: 'Belanja diperbarui' };
+    }
+  }
+  return { error: 'Not found' };
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=2.1">
 </head>
+
 <body class="dark-theme">
     <div class="app-container">
         <!-- Sidebar -->
@@ -123,9 +125,12 @@
 
                     <div class="dashboard-sections">
                         <div class="recent-section">
-                            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div class="section-header"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3>Transaksi Terakhir</h3>
-                                <a href="#" onclick="switchView('transactions')" style="color: var(--accent-secondary); text-decoration: none; font-size: 14px;">Lihat Semua</a>
+                                <a href="#" onclick="switchView('transactions')"
+                                    style="color: var(--accent-secondary); text-decoration: none; font-size: 14px;">Lihat
+                                    Semua</a>
                             </div>
                             <div class="table-container">
                                 <table id="recentTxTable">
@@ -143,12 +148,15 @@
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div class="quick-info-section">
-                            <div class="stat-card" style="background: var(--grad-mesh); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-                                <i class="fas fa-info-circle" style="font-size: 40px; color: var(--accent-primary); margin-bottom: 20px;"></i>
+                            <div class="stat-card"
+                                style="background: var(--grad-mesh); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                                <i class="fas fa-info-circle"
+                                    style="font-size: 40px; color: var(--accent-primary); margin-bottom: 20px;"></i>
                                 <h4>Tips Penggunaan</h4>
-                                <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Pastikan data anggota sudah terdaftar sebelum menginput iuran baru.</p>
+                                <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Pastikan data
+                                    anggota sudah terdaftar sebelum menginput iuran baru.</p>
                             </div>
                         </div>
                     </div>
@@ -181,6 +189,7 @@
                                     <th>Nama Anggota</th>
                                     <th>Nominal</th>
                                     <th>Deskripsi</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -204,6 +213,7 @@
                                     <th>Tanggal</th>
                                     <th>Nominal</th>
                                     <th>Keterangan</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -219,18 +229,21 @@
                         <h2>Pengaturan Aplikasi</h2>
                         <p class="subtitle">Konfigurasi koneksi API untuk hosting eksternal.</p>
                     </div>
-                    
+
                     <div class="table-container" style="max-width: 800px; margin-top: 24px;">
                         <form id="formSettings" style="padding: 10px;">
                             <div class="form-group full-width">
                                 <label>Google Apps Script Web App URL</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-link"></i>
-                                    <input type="text" id="inputApiUrl" placeholder="https://script.google.com/macros/s/.../exec" style="padding-left: 48px;">
+                                    <input type="text" id="inputApiUrl"
+                                        placeholder="https://script.google.com/macros/s/.../exec"
+                                        style="padding-left: 48px;">
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
-                                    <i class="fas fa-info-circle"></i> 
-                                    Masukkan URL Web App hasil deployment dari Google Apps Script untuk menghubungkan GitHub Pages dengan database Spreadsheet Anda.
+                                    <i class="fas fa-info-circle"></i>
+                                    Masukkan URL Web App hasil deployment dari Google Apps Script untuk menghubungkan
+                                    GitHub Pages dengan database Spreadsheet Anda.
                                 </p>
                             </div>
                             <button type="submit" class="btn btn-primary">
@@ -245,7 +258,8 @@
                         </div>
                         <div class="stat-info">
                             <span class="stat-label">Status Koneksi</span>
-                            <div class="stat-value" id="connectionStatus" style="font-size: 18px; margin-top: 5px;">Mengecek...</div>
+                            <div class="stat-value" id="connectionStatus" style="font-size: 18px; margin-top: 5px;">
+                                Mengecek...</div>
                         </div>
                     </div>
                 </div>
@@ -365,6 +379,37 @@
         </div>
     </div>
 
+    </div>
+
+    <!-- Modal Edit -->
+    <div id="modalEdit" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Data</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="formEdit">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="editType">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Tanggal</label>
+                        <input type="date" id="editDate" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Nominal (Rp)</label>
+                        <input type="number" id="editAmount" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Keterangan</label>
+                        <textarea id="editDesc" rows="3" required></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
 
@@ -376,6 +421,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.0"></script>
+    <script src="app.js?v=2.2"></script>
 </body>
 </html>
