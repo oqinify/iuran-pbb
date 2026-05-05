@@ -265,6 +265,9 @@ function setupEventListeners() {
     if (formTx) {
         formTx.onsubmit = async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
             const data = {
                 memberId: document.getElementById('selectMember').value,
                 date: document.getElementById('txDate').value,
@@ -272,17 +275,22 @@ function setupEventListeners() {
                 description: document.getElementById('txDesc').value
             };
 
-            showLoading(true);
             try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                document.body.style.cursor = 'wait';
+
                 const res = await callApi('addTransaction', data);
                 showToast(res.message || 'Transaksi berhasil');
                 modalTx.classList.remove('active');
-                await fetchInitialData(); // Wait for data refresh
+                await fetchInitialData();
                 e.target.reset();
             } catch (err) {
                 showToast('Gagal menyimpan transaksi: ' + err, 'error');
             } finally {
-                showLoading(false);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.style.cursor = 'default';
             }
         };
     }
@@ -291,26 +299,40 @@ function setupEventListeners() {
     if (formMem) {
         formMem.onsubmit = async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+
             const data = {
                 name: document.getElementById('memName').value,
                 department: document.getElementById('memDept').value,
                 quota: document.getElementById('memQuota').value
             };
 
-            showLoading(true);
             try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                document.body.style.cursor = 'wait';
+
                 const res = await callApi('addMember', data);
                 showToast('Anggota berhasil didaftarkan');
                 modalMem.classList.remove('active');
-                await fetchMembers(); // Wait for list refresh
+                await fetchMembers();
                 e.target.reset();
             } catch (err) {
                 showToast('Gagal mendaftarkan anggota: ' + err, 'error');
             } finally {
-                showLoading(false);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.style.cursor = 'default';
             }
         };
     }
+
+    // Auto-sync every 5 minutes
+    setInterval(() => {
+        console.log('Auto-syncing dashboard...');
+        fetchInitialData();
+    }, 5 * 60 * 1000);
 
     // Settings Form
     const formSettings = document.getElementById('formSettings');
