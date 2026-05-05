@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iuran Kantor | Premium Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>IuranKu</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="members">
+                    <i class="fas fa-users"></i>
+                    <span>Anggota</span>
+                </a>
+                <a href="#" class="nav-item" data-view="transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">Admin</div>
+                    <div class="user-info">
+                        <span class="user-name">Office Admin</span>
+                        <span class="user-role">Superuser</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="mobile-menu-btn" id="btnToggleSidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="search-bar" style="display: none;"> <!-- Hidden for now to focus on layout -->
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari transaksi atau anggota...">
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="btnNewTx">
+                        <i class="fas fa-plus"></i>
+                        <span>Iuran Baru</span>
+                    </button>
+                </div>
+            </header>
+
+            <div id="viewContainer" class="view-container">
+                <!-- Dashboard View -->
+                <div id="dashboardView" class="view active">
+                    <div class="welcome-section">
+                        <h1>Halo, Admin! 👋</h1>
+                        <p class="subtitle">Berikut adalah ringkasan iuran kantor hari ini.</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card purple">
+                            <div class="stat-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Pagu</span>
+                                <div class="stat-value" id="statTotalQuota">Rp 0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card blue">
+                            <div class="stat-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Terpakai</span>
+                                <div class="stat-value" id="statTotalUsed">Rp 0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-label">Sisa Saldo</span>
+                                <div class="stat-value" id="statTotalBalance">Rp 0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card rose">
+                            <div class="stat-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-label">Utilisasi</span>
+                                <div class="stat-value" id="statUsagePercent">0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-sections">
+                        <div class="recent-section">
+                            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3>Transaksi Terakhir</h3>
+                                <a href="#" onclick="switchView('transactions')" style="color: var(--accent-secondary); text-decoration: none; font-size: 14px;">Lihat Semua</a>
+                            </div>
+                            <div class="table-container">
+                                <table id="recentTxTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Anggota</th>
+                                            <th>Nominal</th>
+                                            <th>Keterangan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-info-section">
+                            <div class="stat-card" style="background: var(--grad-mesh); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                                <i class="fas fa-info-circle" style="font-size: 40px; color: var(--accent-primary); margin-bottom: 20px;"></i>
+                                <h4>Tips Penggunaan</h4>
+                                <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Pastikan data anggota sudah terdaftar sebelum menginput iuran baru.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Members View -->
+                <div id="membersView" class="view">
+                    <div class="section-header">
+                        <h2>Daftar Anggota</h2>
+                        <button class="btn btn-secondary" id="btnAddMember">
+                            <i class="fas fa-user-plus"></i> Tambah Anggota
+                        </button>
+                    </div>
+                    <div class="members-grid" id="membersGrid">
+                        <!-- Members cards injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Transactions View -->
+                <div id="transactionsView" class="view">
+                    <div class="section-header">
+                        <h2>Semua Transaksi</h2>
+                    </div>
+                    <div class="table-container full-height">
+                        <table id="allTxTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tanggal</th>
+                                    <th>Nama Anggota</th>
+                                    <th>Nominal</th>
+                                    <th>Deskripsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settingsView" class="view">
+                    <div class="section-header">
+                        <h2>Pengaturan Aplikasi</h2>
+                        <p class="subtitle">Konfigurasi koneksi API untuk hosting eksternal.</p>
+                    </div>
+                    
+                    <div class="table-container" style="max-width: 800px; margin-top: 24px;">
+                        <form id="formSettings" style="padding: 10px;">
+                            <div class="form-group full-width">
+                                <label>Google Apps Script Web App URL</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-link"></i>
+                                    <input type="text" id="inputApiUrl" placeholder="https://script.google.com/macros/s/.../exec" style="padding-left: 48px;">
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Masukkan URL Web App hasil deployment dari Google Apps Script untuk menghubungkan GitHub Pages dengan database Spreadsheet Anda.
+                                </p>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Simpan Pengaturan
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="stat-card purple" style="margin-top: 32px; max-width: 800px;">
+                        <div class="stat-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Status Koneksi</span>
+                            <div class="stat-value" id="connectionStatus" style="font-size: 18px; margin-top: 5px;">Mengecek...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalTx" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Input Iuran Baru</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="formTransaction">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Pilih Anggota</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <select id="selectMember" required>
+                                <!-- Options injected by JS -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar-alt"></i>
+                            <input type="date" id="txDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nominal (Rp)</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <input type="number" id="txAmount" placeholder="Contoh: 50000" required>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Keterangan</label>
+                        <textarea id="txDesc" rows="3" placeholder="Misal: Iuran bulan Mei"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Simpan Transaksi</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalMember" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Anggota Baru</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="formMember">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nama Lengkap</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-tag"></i>
+                            <input type="text" id="memName" placeholder="Masukkan nama lengkap..." required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Departemen</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-building"></i>
+                            <input type="text" id="memDept" placeholder="Divisi / Dept..." required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pagu Iuran (Rp)</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-wallet"></i>
+                            <input type="number" id="memQuota" placeholder="Batas iuran..." required>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Daftarkan Anggota</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
