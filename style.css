@@ -371,14 +371,16 @@ td:last-child { border-radius: 0 12px 12px 0; }
     position: fixed;
     bottom: 40px;
     right: 40px;
-    padding: 20px 32px;
+    padding: 16px 32px;
     border-radius: 16px;
     background: var(--accent-success);
-    color: #000;
-    font-weight: 700;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    z-index: 2000;
     display: none;
-    animation: slideUp 0.3s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes slideUp {

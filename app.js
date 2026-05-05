@@ -346,7 +346,8 @@ function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
     toast.textContent = msg;
-    toast.style.background = type === 'error' ? 'var(--accent-red)' : 'var(--accent-green)';
+    toast.style.background = type === 'error' ? 'var(--accent-error)' : 'var(--accent-success)';
+    toast.style.color = '#fff';
     toast.style.display = 'block';
     setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
