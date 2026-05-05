@@ -11,6 +11,7 @@ const CONFIG = {
 let appData = {
     members: [],
     transactions: [],
+    expenses: [],
     stats: {}
 };
 
@@ -81,11 +82,13 @@ async function fetchInitialData() {
         const data = await callApi('getDashboardData');
         appData.stats = data.stats;
         appData.transactions = data.recentTransactions;
+        appData.expenses = data.recentExpenses;
         renderDashboard();
         
         // Background fetch
         fetchMembers();
         fetchTransactions();
+        fetchExpenses();
     } catch (err) {
         showToast('Gagal mengambil data: ' + err, 'error');
     } finally {
@@ -114,6 +117,16 @@ async function fetchTransactions() {
     }
 }
 
+async function fetchExpenses() {
+    try {
+        const exps = await callApi('getExpenses');
+        appData.expenses = exps;
+        renderAllExpenses();
+    } catch (err) {
+        console.error('Fetch expenses error:', err);
+    }
+}
+
 // Rendering Logic
 function renderDashboard() {
     const stats = appData.stats;
@@ -121,8 +134,8 @@ function renderDashboard() {
 
     document.getElementById('statTotalQuota').textContent = formatIDR(stats.totalQuota);
     document.getElementById('statTotalUsed').textContent = formatIDR(stats.totalUsed);
-    document.getElementById('statTotalBalance').textContent = formatIDR(stats.totalBalance);
-    document.getElementById('statUsagePercent').textContent = stats.usagePercentage + '%';
+    document.getElementById('statTotalExpense').textContent = formatIDR(stats.totalExpense);
+    document.getElementById('statNetBalance').textContent = formatIDR(stats.netBalance);
 
     const tbody = document.querySelector('#recentTxTable tbody');
     tbody.innerHTML = '';
@@ -173,6 +186,7 @@ function renderMembers() {
 
 function renderAllTransactions() {
     const tbody = document.querySelector('#allTxTable tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     
     appData.transactions.forEach(tx => {
@@ -184,6 +198,25 @@ function renderAllTransactions() {
                 <td>${member.Name}</td>
                 <td>${formatIDR(tx.Amount)}</td>
                 <td>${tx.Description || '-'}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function renderAllExpenses() {
+    const tbody = document.querySelector('#allExpTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    appData.expenses.forEach(exp => {
+        const row = `
+            <tr>
+                <td>${exp.ID}</td>
+                <td>${formatDate(exp.Date)}</td>
+                <td>${exp.Category}</td>
+                <td>${formatIDR(exp.Amount)}</td>
+                <td>${exp.Description || '-'}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -246,17 +279,21 @@ function setupEventListeners() {
     // Modals
     const modalTx = document.getElementById('modalTx');
     const modalMem = document.getElementById('modalMember');
+    const modalExp = document.getElementById('modalExpense');
 
     const btnNewTx = document.getElementById('btnNewTx');
     const btnAddMember = document.getElementById('btnAddMember');
+    const btnNewExp = document.getElementById('btnNewExp');
 
     if (btnNewTx) btnNewTx.onclick = () => modalTx.classList.add('active');
     if (btnAddMember) btnAddMember.onclick = () => modalMem.classList.add('active');
+    if (btnNewExp) btnNewExp.onclick = () => modalExp.classList.add('active');
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = () => {
             if (modalTx) modalTx.classList.remove('active');
             if (modalMem) modalMem.classList.remove('active');
+            if (modalExp) modalExp.classList.remove('active');
         };
     });
 
@@ -320,6 +357,41 @@ function setupEventListeners() {
                 e.target.reset();
             } catch (err) {
                 showToast('Gagal mendaftarkan anggota: ' + err, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.style.cursor = 'default';
+            }
+        };
+    }
+
+    const formExp = document.getElementById('formExpense');
+    if (formExp) {
+        formExp.onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+
+            const data = {
+                date: document.getElementById('expDate').value,
+                amount: document.getElementById('expAmount').value,
+                category: document.getElementById('expCategory').value,
+                description: document.getElementById('expDesc').value
+            };
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                document.body.style.cursor = 'wait';
+
+                const res = await callApi('addExpense', data);
+                showToast(res.message || 'Belanja berhasil dicatat');
+                const modalExp = document.getElementById('modalExpense');
+                if (modalExp) modalExp.classList.remove('active');
+                await fetchInitialData();
+                e.target.reset();
+            } catch (err) {
+                showToast('Gagal mencatat belanja: ' + err, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;

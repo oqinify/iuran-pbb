@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1.5">
+    <link rel="stylesheet" href="style.css?v=1.6">
 </head>
 <body class="dark-theme">
     <div class="app-container">
@@ -34,6 +34,10 @@
                 <a href="#" class="nav-item" data-view="transactions">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Transaksi</span>
+                </a>
+                <a href="#" class="nav-item" data-view="expenses">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Belanja Kantor</span>
                 </a>
                 <a href="#" class="nav-item" data-view="settings">
                     <i class="fas fa-cog"></i>
@@ -66,7 +70,11 @@
                         <input type="text" placeholder="Cari transaksi atau anggota...">
                     </div>
                 </div>
-                <div class="actions">
+                <div class="actions" style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" id="btnNewExp">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span>Belanja Baru</span>
+                    </button>
                     <button class="btn btn-primary" id="btnNewTx">
                         <i class="fas fa-plus"></i>
                         <span>Iuran Baru</span>
@@ -82,41 +90,33 @@
                         <p class="subtitle">Berikut adalah ringkasan iuran kantor hari ini.</p>
                     </div>
 
-                    <div class="stats-grid">
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                         <div class="stat-card purple">
-                            <div class="stat-icon">
-                                <i class="fas fa-coins"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-coins"></i></div>
                             <div class="stat-info">
                                 <span class="stat-label">Total Pagu</span>
                                 <div class="stat-value" id="statTotalQuota">Rp 0</div>
                             </div>
                         </div>
                         <div class="stat-card blue">
-                            <div class="stat-icon">
-                                <i class="fas fa-receipt"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-receipt"></i></div>
                             <div class="stat-info">
-                                <span class="stat-label">Total Terpakai</span>
+                                <span class="stat-label">Total Iuran</span>
                                 <div class="stat-value" id="statTotalUsed">Rp 0</div>
                             </div>
                         </div>
-                        <div class="stat-card green">
-                            <div class="stat-icon">
-                                <i class="fas fa-balance-scale"></i>
-                            </div>
+                        <div class="stat-card rose">
+                            <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
                             <div class="stat-info">
-                                <span class="stat-label">Sisa Saldo</span>
-                                <div class="stat-value" id="statTotalBalance">Rp 0</div>
+                                <span class="stat-label">Total Belanja</span>
+                                <div class="stat-value" id="statTotalExpense">Rp 0</div>
                             </div>
                         </div>
-                        <div class="stat-card rose">
-                            <div class="stat-icon">
-                                <i class="fas fa-percentage"></i>
-                            </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon"><i class="fas fa-wallet"></i></div>
                             <div class="stat-info">
-                                <span class="stat-label">Utilisasi</span>
-                                <div class="stat-value" id="statUsagePercent">0%</div>
+                                <span class="stat-label">Saldo Kas</span>
+                                <div class="stat-value" id="statNetBalance">Rp 0</div>
                             </div>
                         </div>
                     </div>
@@ -181,6 +181,30 @@
                                     <th>Nama Anggota</th>
                                     <th>Nominal</th>
                                     <th>Deskripsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Expenses View -->
+                <div id="expensesView" class="view">
+                    <div class="view-header">
+                        <h2>Laporan Belanja Kantor</h2>
+                        <p class="subtitle">Daftar pengeluaran operasional dari dana iuran.</p>
+                    </div>
+                    <div class="table-container">
+                        <table id="allExpTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Nominal</th>
+                                    <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -307,6 +331,43 @@
         </div>
     </div>
 
+    <!-- Modal Belanja Baru -->
+    <div id="modalExpense" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Catat Belanja Baru</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="formExpense">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <input type="date" id="expDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nominal (Rp)</label>
+                        <input type="number" id="expAmount" placeholder="Contoh: 50000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="expCategory" required>
+                            <option value="Konsumsi">Konsumsi</option>
+                            <option value="ATK">ATK</option>
+                            <option value="Kebersihan">Kebersihan</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Lain-lain">Lain-lain</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan</label>
+                        <input type="text" id="expDesc" placeholder="Contoh: Beli snack sore">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Simpan Belanja</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
 
@@ -318,6 +379,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.5"></script>
+    <script src="app.js?v=1.6"></script>
 </body>
 </html>

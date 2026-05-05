@@ -6,7 +6,8 @@
 const SS = SpreadsheetApp.getActiveSpreadsheet();
 const SHEETS = {
   MEMBERS: 'Members',
-  TRANSACTIONS: 'Transactions'
+  TRANSACTIONS: 'Transactions',
+  EXPENSES: 'Expenses'
 };
 
 function doGet(e) {
@@ -41,9 +42,15 @@ function handleApiRequest(e) {
       case 'getTransactions':
         response = getTransactions();
         break;
+      case 'getExpenses':
+        response = getExpenses();
+        break;
       case 'addTransaction':
         // For GET-based writes (GitHub Pages compat)
         response = addTransaction(e.parameter);
+        break;
+      case 'addExpense':
+        response = addExpense(e.parameter);
         break;
       case 'addMember':
         response = addMember(e.parameter);
@@ -80,6 +87,12 @@ function initSheets() {
     s.appendRow(['ID', 'MemberID', 'Date', 'Amount', 'Description', 'Timestamp']);
     s.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#f3f3f3');
   }
+
+  if (!sheets.includes(SHEETS.EXPENSES)) {
+    const s = SS.insertSheet(SHEETS.EXPENSES);
+    s.appendRow(['ID', 'Date', 'Amount', 'Category', 'Description', 'Timestamp']);
+    s.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#f3f3f3');
+  }
 }
 
 /**
@@ -103,9 +116,11 @@ function getMembers() {
 function getDashboardData() {
   const members = getMembers();
   const transactions = getTransactions();
+  const expenses = getExpenses();
   
   const totalQuota = members.reduce((sum, m) => sum + (Number(m.TotalQuota) || 0), 0);
   const totalUsed = members.reduce((sum, m) => sum + (Number(m.UsedAmount) || 0), 0);
+  const totalExpense = expenses.reduce((sum, e) => sum + (Number(e.Amount) || 0), 0);
   const totalBalance = totalQuota - totalUsed;
   
   return {
@@ -113,10 +128,13 @@ function getDashboardData() {
       totalMembers: members.length,
       totalQuota: totalQuota,
       totalUsed: totalUsed,
+      totalExpense: totalExpense,
+      netBalance: totalUsed - totalExpense,
       totalBalance: totalBalance,
       usagePercentage: totalQuota > 0 ? (totalUsed / totalQuota * 100).toFixed(1) : 0
     },
-    recentTransactions: transactions.slice(-5).reverse()
+    recentTransactions: transactions.slice(-5).reverse(),
+    recentExpenses: expenses.slice(-5).reverse()
   };
 }
 
@@ -196,4 +214,40 @@ function addMember(formData) {
   ]);
   
   return { success: true, id: id };
+}
+
+/**
+ * Fetch all expenses
+ */
+function getExpenses() {
+  const sheet = SS.getSheetByName(SHEETS.EXPENSES);
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  
+  return data.map(row => {
+    let obj = {};
+    headers.forEach((header, i) => obj[header] = row[i]);
+    return obj;
+  });
+}
+
+/**
+ * Add a new office expense
+ */
+function addExpense(formData) {
+  const sheet = SS.getSheetByName(SHEETS.EXPENSES);
+  const id = 'EXP-' + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss");
+  const timestamp = new Date();
+  
+  sheet.appendRow([
+    id,
+    formData.date,
+    formData.amount,
+    formData.category,
+    formData.description,
+    timestamp
+  ]);
+  
+  return { success: true, message: 'Belanja berhasil dicatat' };
 }
