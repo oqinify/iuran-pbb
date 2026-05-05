@@ -452,6 +452,10 @@ td:last-child { border-radius: 0 12px 12px 0; }
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 260px;
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+        background: #151924; /* Solid background for mobile */
+        overflow-y: auto;
     }
     
     .sidebar.active {
@@ -460,11 +464,23 @@ td:last-child { border-radius: 0 12px 12px 0; }
     
     .main-content {
         margin-left: 0;
-        padding: 32px 24px;
+        padding: 24px 20px;
+        padding-top: 80px; /* Space for fixed header if any */
     }
     
     .mobile-menu-btn {
         display: flex;
+        z-index: 1100;
+    }
+
+    .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        background: var(--bg-main);
+        margin: -40px -40px 40px -40px;
+        padding: 20px 40px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 }
 
