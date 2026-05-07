@@ -71,12 +71,12 @@ function initSheets() {
   
   if (!sheets.includes(SHEETS.TRANSACTIONS)) {
     const s = SS.insertSheet(SHEETS.TRANSACTIONS);
-    s.appendRow(['ID', 'MemberID', 'Date', 'Amount', 'Description', 'Attachment', 'Timestamp']);
+    s.appendRow(['ID', 'MemberID', 'Date', 'Amount', 'Description', 'InvoiceDoc', 'ReceiptDoc', 'Timestamp']);
   }
 
   if (!sheets.includes(SHEETS.EXPENSES)) {
     const s = SS.insertSheet(SHEETS.EXPENSES);
-    s.appendRow(['ID', 'Date', 'Amount', 'Description', 'Attachment', 'Timestamp']);
+    s.appendRow(['ID', 'Date', 'Amount', 'Description', 'InvoiceDoc', 'ReceiptDoc', 'Timestamp']);
   }
   
   const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
@@ -160,7 +160,7 @@ function addTransaction(p) {
   const sheetMem = SS.getSheetByName(SHEETS.MEMBERS);
   const id = 'TX-' + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss");
   
-  sheetTx.appendRow([id, p.memberId, p.date, p.amount, p.description, p.attachmentUrl || '', new Date()]);
+  sheetTx.appendRow([id, p.memberId, p.date, p.amount, p.description, p.invoiceUrl || '', p.receiptUrl || '', new Date()]);
   
   const memData = sheetMem.getDataRange().getValues();
   const headers = memData[0];
@@ -185,7 +185,7 @@ function addTransaction(p) {
 function addExpense(p) {
   const sheet = SS.getSheetByName(SHEETS.EXPENSES);
   const id = 'EXP-' + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss");
-  sheet.appendRow([id, p.date, p.amount, p.description, p.attachmentUrl || '', new Date()]);
+  sheet.appendRow([id, p.date, p.amount, p.description, p.invoiceUrl || '', p.receiptUrl || '', new Date()]);
   return { success: true, message: 'Berhasil' };
 }
 
@@ -210,10 +210,12 @@ function deleteTransaction(p) {
     if (data[i][idCol] === p.id) {
       txAmount = Number(data[i][headers.indexOf('Amount')]) || 0;
       txMemberId = data[i][headers.indexOf('MemberID')];
-      const attachmentUrl = data[i][attCol];
+      const invoiceUrl = data[i][headers.indexOf('InvoiceDoc')];
+      const receiptUrl = data[i][headers.indexOf('ReceiptDoc')];
       
       sheetTx.deleteRow(i + 1);
-      if (attachmentUrl) deleteFileByUrl(attachmentUrl);
+      if (invoiceUrl) deleteFileByUrl(invoiceUrl);
+      if (receiptUrl) deleteFileByUrl(receiptUrl);
       
       // Update Member Balance
       const memData = sheetMem.getDataRange().getValues();
@@ -284,11 +286,11 @@ function deleteExpense(p) {
   const idCol = headers.indexOf('ID');
   const attCol = headers.indexOf('Attachment');
   
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][idCol] === p.id) {
-      const attachmentUrl = data[i][attCol];
+      const invoiceUrl = data[i][headers.indexOf('InvoiceDoc')];
+      const receiptUrl = data[i][headers.indexOf('ReceiptDoc')];
       sheet.deleteRow(i + 1);
-      if (attachmentUrl) deleteFileByUrl(attachmentUrl);
+      if (invoiceUrl) deleteFileByUrl(invoiceUrl);
+      if (receiptUrl) deleteFileByUrl(receiptUrl);
       return { success: true, message: 'Belanja dihapus' };
     }
   }

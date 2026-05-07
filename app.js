@@ -194,7 +194,6 @@ function renderMembers() {
         grid.innerHTML += card;
     });
 }
-
 function renderAllTransactions() {
     const tbody = document.querySelector('#allTxTable tbody');
     if (!tbody) return;
@@ -202,7 +201,9 @@ function renderAllTransactions() {
     
     appData.transactions.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
-        const attachment = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Lihat Bukti" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-paperclip"></i></a>` : '';
+        const invLink = tx.InvoiceDoc ? `<a href="${tx.InvoiceDoc}" target="_blank" title="Bukti Tagihan" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-file-invoice"></i></a>` : '';
+        const recLink = tx.ReceiptDoc ? `<a href="${tx.ReceiptDoc}" target="_blank" title="Bukti Pembayaran" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
+        
         const actions = `
             <div class="action-buttons">
                 <button class="btn btn-icon" onclick="editData('${tx.ID}', 'tx')" title="Edit"><i class="fas fa-edit"></i></button>
@@ -215,7 +216,7 @@ function renderAllTransactions() {
                 <td>${formatDate(tx.Date)}</td>
                 <td>${member.Name}</td>
                 <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'}${attachment}</td>
+                <td>${tx.Description || '-'}${invLink}${recLink}</td>
                 <td>${actions}</td>
             </tr>
         `;
@@ -229,7 +230,9 @@ function renderAllExpenses() {
     tbody.innerHTML = '';
     
     appData.expenses.forEach(exp => {
-        const attachment = exp.Attachment ? `<a href="${exp.Attachment}" target="_blank" title="Lihat Bukti" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-paperclip"></i></a>` : '';
+        const invLink = exp.InvoiceDoc ? `<a href="${exp.InvoiceDoc}" target="_blank" title="Bukti Tagihan" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-file-invoice"></i></a>` : '';
+        const recLink = exp.ReceiptDoc ? `<a href="${exp.ReceiptDoc}" target="_blank" title="Bukti Pembayaran" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
+        
         const actions = `
             <div class="action-buttons">
                 <button class="btn btn-icon" onclick="editData('${exp.ID}', 'exp')" title="Edit"><i class="fas fa-edit"></i></button>
@@ -241,7 +244,7 @@ function renderAllExpenses() {
                 <td>${exp.ID}</td>
                 <td>${formatDate(exp.Date)}</td>
                 <td>${formatIDR(exp.Amount)}</td>
-                <td>${exp.Description || '-'}${attachment}</td>
+                <td>${exp.Description || '-'}${invLink}${recLink}</td>
                 <td>${actions}</td>
             </tr>
         `;
@@ -365,19 +368,28 @@ function setupEventListeners() {
                 data.description = `Iuran ke-${count + 1}`;
             }
 
-            const fileInput = document.getElementById('txFile');
+            const invInput = document.getElementById('txInvoice');
+            const recInput = document.getElementById('txReceipt');
 
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
 
-                // Handle File Upload
-                if (fileInput && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
+                // Handle Invoice Upload
+                if (invInput && invInput.files.length > 0) {
+                    const file = invInput.files[0];
                     const base64 = await toBase64(file);
-                    const uploadRes = await callApi('uploadFile', { base64, name: file.name });
-                    if (uploadRes.success) data.attachmentUrl = uploadRes.url;
+                    const res = await callApi('uploadFile', { base64, name: 'Tagihan_' + file.name });
+                    if (res.success) data.invoiceUrl = res.url;
+                }
+
+                // Handle Receipt Upload
+                if (recInput && recInput.files.length > 0) {
+                    const file = recInput.files[0];
+                    const base64 = await toBase64(file);
+                    const res = await callApi('uploadFile', { base64, name: 'Bayar_' + file.name });
+                    if (res.success) data.receiptUrl = res.url;
                 }
 
                 const res = await callApi('addTransaction', data);
@@ -453,19 +465,28 @@ function setupEventListeners() {
                 return;
             }
 
-            const fileInput = document.getElementById('expFile');
+            const invInput = document.getElementById('expInvoice');
+            const recInput = document.getElementById('expReceipt');
 
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
 
-                // Handle File Upload
-                if (fileInput && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
+                // Handle Invoice Upload
+                if (invInput && invInput.files.length > 0) {
+                    const file = invInput.files[0];
                     const base64 = await toBase64(file);
-                    const uploadRes = await callApi('uploadFile', { base64, name: file.name });
-                    if (uploadRes.success) data.attachmentUrl = uploadRes.url;
+                    const res = await callApi('uploadFile', { base64, name: 'Exp_Tagihan_' + file.name });
+                    if (res.success) data.invoiceUrl = res.url;
+                }
+
+                // Handle Receipt Upload
+                if (recInput && recInput.files.length > 0) {
+                    const file = recInput.files[0];
+                    const base64 = await toBase64(file);
+                    const res = await callApi('uploadFile', { base64, name: 'Exp_Bayar_' + file.name });
+                    if (res.success) data.receiptUrl = res.url;
                 }
 
                 const res = await callApi('addExpense', data);
