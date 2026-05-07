@@ -48,7 +48,7 @@ async function checkConnection() {
     try {
         statusEl.textContent = 'Menghubungkan...';
         const data = await callApi('getDashboardData');
-        const ver = data.version || '1.0.0';
+        const ver = data.version || '2.8';
         statusEl.innerHTML = `<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung (v${ver})`;
         if (versionEl) versionEl.textContent = 'Server Version: ' + ver;
     } catch (err) {
@@ -201,8 +201,7 @@ function renderAllTransactions() {
     
     appData.transactions.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
-        const invLink = tx.InvoiceDoc ? `<a href="${tx.InvoiceDoc}" target="_blank" title="Bukti Tagihan" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-file-invoice"></i></a>` : '';
-        const recLink = tx.ReceiptDoc ? `<a href="${tx.ReceiptDoc}" target="_blank" title="Bukti Pembayaran" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
+        const recLink = tx.ReceiptDoc ? `<a href="${tx.ReceiptDoc}" target="_blank" title="Bukti Setor" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
         
         const actions = `
             <div class="action-buttons">
@@ -216,7 +215,7 @@ function renderAllTransactions() {
                 <td>${formatDate(tx.Date)}</td>
                 <td>${member.Name}</td>
                 <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'}${invLink}${recLink}</td>
+                <td>${tx.Description || '-'}${recLink}</td>
                 <td>${actions}</td>
             </tr>
         `;
@@ -367,8 +366,6 @@ function setupEventListeners() {
                 const count = appData.transactions.filter(t => t.MemberID === data.memberId).length;
                 data.description = `Iuran ke-${count + 1}`;
             }
-
-            const invInput = document.getElementById('txInvoice');
             const recInput = document.getElementById('txReceipt');
 
             try {
@@ -376,19 +373,14 @@ function setupEventListeners() {
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
 
-                // Handle Invoice Upload
-                if (invInput && invInput.files.length > 0) {
-                    const file = invInput.files[0];
-                    const base64 = await toBase64(file);
-                    const res = await callApi('uploadFile', { base64, name: 'Tagihan_' + file.name });
-                    if (res.success) data.invoiceUrl = res.url;
-                }
-
                 // Handle Receipt Upload
                 if (recInput && recInput.files.length > 0) {
+                    const member = appData.members.find(m => m.ID === data.memberId);
+                    const memberName = member ? member.Name.replace(/\s+/g, '-') : 'Unknown';
+                    const count = appData.transactions.filter(t => t.MemberID === data.memberId).length;
                     const file = recInput.files[0];
                     const base64 = await toBase64(file);
-                    const res = await callApi('uploadFile', { base64, name: 'Bayar_' + file.name });
+                    const res = await callApi('uploadFile', { base64, name: `Setor_ke-${count + 1}_${memberName}_${file.name}` });
                     if (res.success) data.receiptUrl = res.url;
                 }
 
@@ -475,17 +467,19 @@ function setupEventListeners() {
 
                 // Handle Invoice Upload
                 if (invInput && invInput.files.length > 0) {
+                    const count = appData.expenses.length;
                     const file = invInput.files[0];
                     const base64 = await toBase64(file);
-                    const res = await callApi('uploadFile', { base64, name: 'Exp_Tagihan_' + file.name });
+                    const res = await callApi('uploadFile', { base64, name: `Exp_Tagihan_ke-${count + 1}_${file.name}` });
                     if (res.success) data.invoiceUrl = res.url;
                 }
 
                 // Handle Receipt Upload
                 if (recInput && recInput.files.length > 0) {
+                    const count = appData.expenses.length;
                     const file = recInput.files[0];
                     const base64 = await toBase64(file);
-                    const res = await callApi('uploadFile', { base64, name: 'Exp_Bayar_' + file.name });
+                    const res = await callApi('uploadFile', { base64, name: `Exp_Bayar_ke-${count + 1}_${file.name}` });
                     if (res.success) data.receiptUrl = res.url;
                 }
 

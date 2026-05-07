@@ -284,8 +284,9 @@ function deleteExpense(p) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const idCol = headers.indexOf('ID');
-  const attCol = headers.indexOf('Attachment');
   
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] === p.id) {
       const invoiceUrl = data[i][headers.indexOf('InvoiceDoc')];
       const receiptUrl = data[i][headers.indexOf('ReceiptDoc')];
       sheet.deleteRow(i + 1);
