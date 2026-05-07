@@ -340,7 +340,7 @@ function setupEventListeners() {
             if (!memberId) return;
             const count = appData.transactions.filter(t => t.MemberID === memberId).length;
             const descInput = document.getElementById('txDesc');
-            if (descInput) descInput.value = `Pembayaran ke-${count + 1}`;
+            if (descInput) descInput.value = `Iuran ke-${count + 1}`;
         });
     }
 
@@ -362,7 +362,7 @@ function setupEventListeners() {
             // Fallback description
             if (!data.description) {
                 const count = appData.transactions.filter(t => t.MemberID === data.memberId).length;
-                data.description = `Pembayaran ke-${count + 1}`;
+                data.description = `Iuran ke-${count + 1}`;
             }
 
             const fileInput = document.getElementById('txFile');
