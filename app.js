@@ -13,16 +13,37 @@ let appData = {
     members: [],
     transactions: [],
     expenses: [],
-    stats: {}
+    stats: {},
+    currentYear: new Date().getFullYear()
 };
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initYearSelector();
     fetchInitialData();
     setupEventListeners();
     initSettingsView();
     checkConnection();
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('appTheme') || 'dark-theme';
+    document.body.className = savedTheme;
+    const selector = document.getElementById('selectTheme');
+    if (selector) selector.value = savedTheme;
+}
+
+function initYearSelector() {
+    const selector = document.getElementById('selectYear');
+    if (selector) {
+        selector.value = appData.currentYear;
+        selector.addEventListener('change', (e) => {
+            appData.currentYear = e.target.value;
+            fetchInitialData();
+        });
+    }
+}
 
 function initSettingsView() {
     const input = document.getElementById('inputApiUrl');
@@ -92,7 +113,7 @@ async function callApi(action, data = {}) {
 async function fetchInitialData() {
     showLoading(true);
     try {
-        const data = await callApi('getDashboardData');
+        const data = await callApi('getDashboardData', { year: appData.currentYear });
         appData.stats = data.stats;
         appData.transactions = data.recentTransactions;
         appData.expenses = data.recentExpenses;
@@ -282,6 +303,16 @@ function switchView(viewId) {
 
 // Event Listeners
 function setupEventListeners() {
+    const selectorTheme = document.getElementById('selectTheme');
+    if (selectorTheme) {
+        selectorTheme.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            document.body.className = theme;
+            localStorage.setItem('appTheme', theme);
+            showToast('Tema diubah ke ' + (theme === 'light-theme' ? 'Terang' : 'Gelap'));
+        });
+    }
+
     // Sidebar Toggle for Mobile
     const sidebar = document.querySelector('.sidebar');
     const btnToggle = document.getElementById('btnToggleSidebar');

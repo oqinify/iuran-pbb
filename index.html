@@ -271,6 +271,35 @@
 
                     <div class="table-container" style="max-width: 800px; margin-top: 24px;">
                         <form id="formSettings" style="padding: 10px;">
+                            <div class="form-group full-width" style="margin-bottom: 24px;">
+                                <label>Mode Tampilan</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-moon"></i>
+                                    <select id="selectTheme" style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
+                                        <option value="dark-theme">Gelap (Default)</option>
+                                        <option value="light-theme">Terang</option>
+                                    </select>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                                    Pilih antara mode gelap atau terang sesuai kenyamanan Anda.
+                                </p>
+                            </div>
+
+                            <div class="form-group full-width" style="margin-bottom: 24px;">
+                                <label>Tahun Anggaran</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <select id="selectYear" style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
+                                        <option value="2026">2026</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2024">2024</option>
+                                    </select>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                                    Pilih tahun untuk memfilter seluruh data dashboard dan riwayat.
+                                </p>
+                            </div>
+
                             <div class="form-group full-width">
                                 <label>Google Apps Script Web App URL</label>
                                 <div class="input-wrapper">
