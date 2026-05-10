@@ -61,13 +61,13 @@ async function checkConnection() {
 
     if (CONFIG.IS_GAS_ENV && !CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung via GAS Environment';
-        if (versionEl) versionEl.textContent = `Mode Native GAS`;
+        if (versionEl) versionEl.textContent = `Server Version: Mode Native GAS`;
         return;
     }
     
     if (!CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning)"></i> API URL Belum Diatur';
-        if (versionEl) versionEl.textContent = 'API Tidak Terhubung';
+        if (versionEl) versionEl.textContent = 'Server Version: API Tidak Terhubung';
         return;
     }
 
@@ -75,7 +75,7 @@ async function checkConnection() {
         statusEl.textContent = 'Menghubungkan...';
         const data = await callApi('getDashboardData');
         if (data.version) {
-            versionEl.textContent = `v${data.version}`;
+            versionEl.textContent = `Server Version: v${data.version}`;
             statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung ke API';
         }
     } catch (err) {

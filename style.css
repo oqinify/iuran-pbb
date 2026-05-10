@@ -123,6 +123,7 @@ body {
     margin-left: 8px;
     vertical-align: middle;
     display: inline-block;
+    -webkit-text-fill-color: initial;
 }
 
 .sidebar-nav {
