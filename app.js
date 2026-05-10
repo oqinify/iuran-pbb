@@ -4,7 +4,8 @@
  */
 const CONFIG = {
     API_URL: localStorage.getItem('gas_api_url') || '',
-    IS_GAS_ENV: typeof google !== 'undefined' && google.script && google.script.run
+    IS_GAS_ENV: typeof google !== 'undefined' && google.script && google.script.run,
+    BRANCH: 'testing' // Manual indicator
 };
 
 // State Management
@@ -35,7 +36,7 @@ async function checkConnection() {
     
     if (CONFIG.IS_GAS_ENV && !CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung via GAS Environment';
-        if (versionEl) versionEl.textContent = 'Mode Native GAS';
+        if (versionEl) versionEl.textContent = `Mode Native GAS | Branch: ${CONFIG.BRANCH}`;
         return;
     }
     
@@ -48,9 +49,10 @@ async function checkConnection() {
     try {
         statusEl.textContent = 'Menghubungkan...';
         const data = await callApi('getDashboardData');
-        const ver = data.version || '2.8';
-        statusEl.innerHTML = `<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung (v${ver})`;
-        if (versionEl) versionEl.textContent = 'Server Version: ' + ver;
+        if (data.version) {
+            versionEl.textContent = `v${data.version} | Branch: ${CONFIG.BRANCH}`;
+            statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung ke API';
+        }
     } catch (err) {
         statusEl.innerHTML = '<i class="fas fa-times-circle" style="color: var(--accent-error)"></i> Koneksi Gagal';
         if (versionEl) versionEl.textContent = 'Koneksi Terputus';
