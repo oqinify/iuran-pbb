@@ -127,6 +127,11 @@ body {
     gap: 20px;
 }
 
+.top-bar .actions {
+    display: flex;
+    gap: 10px;
+}
+
 h1 {
     font-size: 36px;
     font-weight: 700;
