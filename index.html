@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iuran Kantor | Premium Dashboard</title>
+    <title>Iuran Kantor - Dashboard Keuangan Premium</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,10 +12,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=3.1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body class="dark-theme">
-    <div class="app-container">
+    <div class="app-container" id="appContainer">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -48,12 +49,14 @@
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <div id="serverVersion" style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">Mengecek versi...</div>
+                <div id="serverVersion"
+                    style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">Mengecek
+                    versi...</div>
                 <div class="user-profile">
                     <div class="avatar">Admin</div>
                     <div class="user-info">
-                        <span class="user-name">Office Admin</span>
-                        <span class="user-role">Superuser</span>
+                        <span class="user-name">Office User</span>
+                        <span class="user-role" id="displayRole">User</span>
                     </div>
                 </div>
             </div>
@@ -77,15 +80,6 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span>Pembayaran</span>
             </a>
-            <a href="#" class="bottom-nav-item" data-view="transactions">
-                <i class="fas fa-history"></i>
-                <span>Iuran</span>
-            </a>
-            <div class="bottom-nav-fab-space"></div>
-            <a href="#" class="bottom-nav-item" data-view="expenses">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Bayar</span>
-            </a>
             <a href="#" class="bottom-nav-item" data-view="members">
                 <i class="fas fa-users"></i>
                 <span>Anggota</span>
@@ -93,7 +87,7 @@
         </nav>
 
         <!-- Floating Action Button -->
-        <div class="fab-container">
+        <div class="fab-container admin-only">
             <button class="fab-main" id="fabMain">
                 <i class="fas fa-plus"></i>
             </button>
@@ -122,11 +116,19 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <button class="btn btn-secondary" id="btnNewExp">
+                    <button class="btn btn-secondary" id="btnLoginHeader">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login Admin</span>
+                    </button>
+                    <button class="btn btn-danger" id="btnLogoutHeader" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                    <button class="btn btn-secondary admin-only" id="btnNewExp">
                         <i class="fas fa-shopping-basket"></i>
                         <span>Bayar Baru</span>
                     </button>
-                    <button class="btn btn-primary" id="btnNewTx">
+                    <button class="btn btn-primary admin-only" id="btnNewTx">
                         <i class="fas fa-plus"></i>
                         <span>Iuran Baru</span>
                     </button>
@@ -215,7 +217,7 @@
                 <div id="membersView" class="view">
                     <div class="section-header">
                         <h2>Daftar Anggota</h2>
-                        <button class="btn btn-secondary" id="btnAddMember">
+                        <button class="btn btn-secondary admin-only" id="btnAddMember">
                             <i class="fas fa-user-plus"></i> Tambah Anggota
                         </button>
                     </div>
@@ -228,6 +230,10 @@
                 <div id="transactionsView" class="view">
                     <div class="section-header">
                         <h2>Riwayat Iuran</h2>
+                        <div class="table-filter">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="filterMemberName" placeholder="Cari nama anggota...">
+                        </div>
                     </div>
                     <div class="table-container full-height">
                         <table id="allTxTable">
@@ -238,7 +244,7 @@
                                     <th>Nama Anggota</th>
                                     <th>Nominal</th>
                                     <th>Deskripsi</th>
-                                    <th>Aksi</th>
+                                    <th class="admin-only">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -262,7 +268,7 @@
                                     <th>Tanggal</th>
                                     <th>Nominal</th>
                                     <th>Keterangan</th>
-                                    <th>Aksi</th>
+                                    <th class="admin-only">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -285,7 +291,8 @@
                                 <label>Mode Tampilan</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-moon"></i>
-                                    <select id="selectTheme" style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
+                                    <select id="selectTheme"
+                                        style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
                                         <option value="dark-theme">Gelap (Default)</option>
                                         <option value="light-theme">Terang</option>
                                     </select>
@@ -299,7 +306,8 @@
                                 <label>Tahun Anggaran</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-calendar-check"></i>
-                                    <select id="selectYear" style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
+                                    <select id="selectYear"
+                                        style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; height: 50px; color: var(--text-input); outline: none;">
                                         <option value="2026">2026</option>
                                         <option value="2025">2025</option>
                                         <option value="2024">2024</option>
@@ -383,7 +391,7 @@
                     </div>
                     <div class="form-group full-width">
                         <label>Bukti Setor</label>
-                        <input type="file" id="txReceipt" accept="image/*,.pdf" required>
+                        <input type="file" id="txReceipt" accept="image/*,.pdf">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Transaksi</button>
@@ -398,6 +406,7 @@
                 <button class="close-modal">&times;</button>
             </div>
             <form id="formMember">
+                <input type="hidden" id="memId">
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>Nama Lengkap</label>
@@ -486,9 +495,52 @@
                         <label>Keterangan</label>
                         <textarea id="editDesc" rows="3" required></textarea>
                     </div>
+                    <div class="form-group full-width" id="editReceiptContainer">
+                        <label>Ganti Bukti Setor (Opsional)</label>
+                        <input type="file" id="editReceipt" accept="image/*,.pdf">
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Simpan Perubahan</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="modalLogin" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h3>Login Administrator</h3>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Masukkan username dan PIN Admin.</p>
+            <form id="formLogin">
+                <div class="form-group full-width">
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="adminUser" placeholder="Username..." required style="margin-bottom: 10px;">
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="adminPin" placeholder="PIN..." required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Buka Akses Admin</button>
+                <button type="button" class="btn btn-secondary close-modal"
+                    style="margin-top: 10px; width: 100%; justify-content: center;">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="modalLogoutConfirm" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h3>Konfirmasi Keluar</h3>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Apakah Anda yakin ingin keluar dari mode Administrator?</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary close-modal" style="flex: 1; justify-content: center;">Batal</button>
+                <button class="btn btn-danger" id="btnConfirmLogout" style="flex: 1; justify-content: center;">Ya, Keluar</button>
+            </div>
         </div>
     </div>
 
@@ -505,4 +557,5 @@
 
     <script src="app.js?v=2.7"></script>
 </body>
+
 </html>

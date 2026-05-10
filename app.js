@@ -14,16 +14,32 @@ let appData = {
     transactions: [],
     expenses: [],
     stats: {},
-    currentYear: new Date().getFullYear()
+    currentYear: new Date().getFullYear(),
+    userRole: getInitialRole(),
+    isForcedRole: false
 };
+
+function getInitialRole() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'view' || params.get('role') === 'user') {
+        return 'user';
+    }
+    // Only return admin if session exists
+    if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+        return 'admin';
+    }
+    return 'user'; // Default to user (viewer) for new visitors
+}
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initYearSelector();
+    initRoleSelector();
     fetchInitialData();
     setupEventListeners();
     initSettingsView();
+    applyRolePermissions();
     checkConnection();
 });
 
@@ -47,13 +63,63 @@ function initYearSelector() {
 function initSettingsView() {
     const input = document.getElementById('inputApiUrl');
     if (input) input.value = CONFIG.API_URL;
+    const roleSelect = document.getElementById('selectRole');
+    if (roleSelect) roleSelect.value = appData.userRole;
+}
+
+function initRoleSelector() {
+    const selector = document.getElementById('selectRole');
+    if (selector) {
+        selector.value = appData.userRole;
+    }
+}
+
+function applyRolePermissions() {
+    const params = new URLSearchParams(window.location.search);
+    const isForcedView = params.get('mode') === 'view' || params.get('role') === 'user';
+    const isViewer = appData.userRole === 'user' || isForcedView;
+
+    if (isViewer) {
+        document.body.classList.add('is-viewer');
+    } else {
+        document.body.classList.remove('is-viewer');
+    }
+
+    // If forced via URL, hide settings entirely for security/UX
+    if (isForcedView) {
+        const settingsNav = document.querySelector('.nav-item[data-view="settings"]');
+        if (settingsNav) settingsNav.style.display = 'none';
+    }
+
+    const displayRole = document.getElementById('displayRole');
+    if (displayRole) {
+        if (isForcedView) displayRole.textContent = 'Public Viewer';
+        else displayRole.textContent = isViewer ? 'Viewer' : 'Administrator';
+    }
+
+    const avatar = document.querySelector('.avatar');
+    if (avatar) {
+        avatar.textContent = isViewer ? 'Usr' : 'Adm';
+    }
+
+    // Toggle Header Buttons
+    const btnLogin = document.getElementById('btnLoginHeader');
+    const btnLogout = document.getElementById('btnLogoutHeader');
+    if (btnLogin && btnLogout) {
+        btnLogin.style.display = isViewer ? 'flex' : 'none';
+        btnLogout.style.display = isViewer ? 'none' : 'flex';
+    }
+
+    // Update settings view based on role
+    const selectRole = document.getElementById('selectRole');
+    if (selectRole) selectRole.value = isViewer ? 'user' : 'admin';
 }
 
 async function checkConnection() {
     const statusEl = document.getElementById('connectionStatus');
     const versionEl = document.getElementById('serverVersion');
     const badgeEl = document.getElementById('branchBadge');
-    
+
     if (badgeEl) {
         badgeEl.textContent = CONFIG.BRANCH === 'testing' ? 'Beta' : CONFIG.BRANCH;
         badgeEl.style.display = CONFIG.BRANCH === 'main' ? 'none' : 'inline-block';
@@ -64,7 +130,7 @@ async function checkConnection() {
         if (versionEl) versionEl.textContent = `Server Version: Mode Native GAS`;
         return;
     }
-    
+
     if (!CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning)"></i> API URL Belum Diatur';
         if (versionEl) versionEl.textContent = 'Server Version: API Tidak Terhubung';
@@ -98,7 +164,7 @@ async function callApi(action, data = {}) {
         });
     } else {
         if (!CONFIG.API_URL) return;
-        
+
         if (action === 'uploadFile') {
             // Use POST for file uploads
             const response = await fetch(CONFIG.API_URL, {
@@ -122,11 +188,11 @@ async function fetchInitialData() {
         appData.transactions = data.recentTransactions;
         appData.expenses = data.recentExpenses;
         renderDashboard();
-        
+
         // Background fetch
         fetchMembers();
-        fetchTransactions();
-        fetchExpenses();
+        fetchTransactions(appData.currentYear);
+        fetchExpenses(appData.currentYear);
     } catch (err) {
         showToast('Gagal mengambil data: ' + err, 'error');
     } finally {
@@ -145,9 +211,9 @@ async function fetchMembers() {
     }
 }
 
-async function fetchTransactions() {
+async function fetchTransactions(year) {
     try {
-        const txs = await callApi('getTransactions');
+        const txs = await callApi('getTransactions', { year: year || appData.currentYear });
         appData.transactions = txs;
         renderAllTransactions();
     } catch (err) {
@@ -155,9 +221,9 @@ async function fetchTransactions() {
     }
 }
 
-async function fetchExpenses() {
+async function fetchExpenses(year) {
     try {
-        const exps = await callApi('getExpenses');
+        const exps = await callApi('getExpenses', { year: year || appData.currentYear });
         appData.expenses = exps;
         renderAllExpenses();
     } catch (err) {
@@ -177,7 +243,7 @@ function renderDashboard() {
 
     const tbody = document.querySelector('#recentTxTable tbody');
     tbody.innerHTML = '';
-    
+
     appData.transactions.slice(0, 5).forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: 'Unknown' };
         const row = `
@@ -200,9 +266,14 @@ function renderMembers() {
         const usagePercent = member.TotalQuota > 0 ? (member.UsedAmount / member.TotalQuota * 100) : 0;
         const card = `
             <div class="member-card">
-                <div class="member-card-header">
-                    <h4>${member.Name}</h4>
-                    <span class="member-dept">${member.Department}</span>
+                <div class="member-card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h4>${member.Name}</h4>
+                        <span class="member-dept">${member.Department}</span>
+                    </div>
+                    <button class="btn-icon admin-only" onclick="editMemberData('${member.ID}')" title="Edit Anggota">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
                 </div>
                 <div class="progress-container">
                     <div class="progress-bar">
@@ -225,11 +296,18 @@ function renderAllTransactions() {
     const tbody = document.querySelector('#allTxTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
-    appData.transactions.forEach(tx => {
+
+    const filterValue = document.getElementById('filterMemberName')?.value.toLowerCase() || '';
+
+    const filteredTxs = appData.transactions.filter(tx => {
+        const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
+        return member.Name.toLowerCase().includes(filterValue);
+    });
+
+    filteredTxs.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
         const recLink = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Bukti Setor" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
-        
+
         const actions = `
             <div class="action-buttons">
                 <button class="btn btn-icon" onclick="editData('${tx.ID}', 'tx')" title="Edit"><i class="fas fa-edit"></i></button>
@@ -243,7 +321,7 @@ function renderAllTransactions() {
                 <td data-label="Anggota">${member.Name}</td>
                 <td data-label="Nominal">${formatIDR(tx.Amount)}</td>
                 <td data-label="Keterangan">${tx.Description || '-'}${recLink}</td>
-                <td data-label="Aksi">${actions}</td>
+                <td data-label="Aksi" class="admin-only">${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -254,11 +332,11 @@ function renderAllExpenses() {
     const tbody = document.querySelector('#allExpTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
+
     appData.expenses.forEach(exp => {
         const invLink = exp.InvoiceDoc ? `<a href="${exp.InvoiceDoc}" target="_blank" title="Bukti Tagihan" style="margin-left:8px; color:var(--accent-primary)"><i class="fas fa-file-invoice"></i></a>` : '';
         const recLink = exp.ReceiptDoc ? `<a href="${exp.ReceiptDoc}" target="_blank" title="Bukti Pembayaran" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
-        
+
         const actions = `
             <div class="action-buttons">
                 <button class="btn btn-icon" onclick="editData('${exp.ID}', 'exp')" title="Edit"><i class="fas fa-edit"></i></button>
@@ -271,7 +349,7 @@ function renderAllExpenses() {
                 <td data-label="Tanggal">${formatDate(exp.Date)}</td>
                 <td data-label="Nominal">${formatIDR(exp.Amount)}</td>
                 <td data-label="Keterangan">${exp.Description || '-'}${invLink}${recLink}</td>
-                <td data-label="Aksi">${actions}</td>
+                <td data-label="Aksi" class="admin-only">${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -292,11 +370,11 @@ function switchView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
-    
+
     const viewEl = document.getElementById(viewId + 'View');
     const navEl = document.querySelector(`.nav-item[data-view="${viewId}"]`);
     const bottomNavEl = document.querySelector(`.bottom-nav-item[data-view="${viewId}"]`);
-    
+
     if (viewEl) viewEl.classList.add('active');
     if (navEl) navEl.classList.add('active');
     if (bottomNavEl) bottomNavEl.classList.add('active');
@@ -320,7 +398,7 @@ function setupEventListeners() {
     // Sidebar Toggle for Mobile
     const sidebar = document.querySelector('.sidebar');
     const btnToggle = document.getElementById('btnToggleSidebar');
-    
+
     if (btnToggle) {
         btnToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -338,7 +416,7 @@ function setupEventListeners() {
 
     // Sidebar & Bottom Nav
     const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item');
-    
+
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -392,7 +470,16 @@ function setupEventListeners() {
     const btnNewExp = document.getElementById('btnNewExp');
 
     if (btnNewTx) btnNewTx.onclick = () => modalTx.classList.add('active');
-    if (btnAddMember) btnAddMember.onclick = () => modalMem.classList.add('active');
+    if (btnAddMember) btnAddMember.onclick = () => {
+        const form = document.getElementById('formMember');
+        if (form) form.reset();
+        document.getElementById('memId').value = '';
+        const modalTitle = document.querySelector('#modalMember h3');
+        if (modalTitle) modalTitle.textContent = 'Tambah Anggota Baru';
+        const btnSubmit = document.querySelector('#formMember .btn-submit');
+        if (btnSubmit) btnSubmit.textContent = 'Daftarkan Anggota';
+        modalMem.classList.add('active');
+    };
     if (btnNewExp) btnNewExp.onclick = () => {
         modalExp.classList.add('active');
         const expDesc = document.getElementById('expDesc');
@@ -404,11 +491,7 @@ function setupEventListeners() {
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = () => {
-            if (modalTx) modalTx.classList.remove('active');
-            if (modalMem) modalMem.classList.remove('active');
-            if (modalExp) modalExp.classList.remove('active');
-            const modalEdit = document.getElementById('modalEdit');
-            if (modalEdit) modalEdit.classList.remove('active');
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
         };
     });
 
@@ -431,7 +514,7 @@ function setupEventListeners() {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
-            
+
             const data = {
                 memberId: document.getElementById('selectMember').value,
                 date: document.getElementById('txDate').value,
@@ -484,22 +567,29 @@ function setupEventListeners() {
             const btn = e.target.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
 
+            const id = document.getElementById('memId').value;
             const data = {
+                id: id,
                 name: document.getElementById('memName').value,
                 department: document.getElementById('memDept').value,
                 quota: document.getElementById('memQuota').value
             };
+            const action = id ? 'editMember' : 'addMember';
 
             try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
 
-                const res = await callApi('addMember', data);
-                showToast('Anggota berhasil didaftarkan');
-                modalMem.classList.remove('active');
-                await fetchMembers();
-                e.target.reset();
+                const res = await callApi(action, data);
+                if (res.error) {
+                    showToast('Gagal: ' + res.error, 'error');
+                } else {
+                    showToast(id ? 'Data anggota diperbarui' : 'Anggota berhasil didaftarkan');
+                    modalMem.classList.remove('active');
+                    await fetchMembers();
+                    e.target.reset();
+                }
             } catch (err) {
                 showToast('Gagal mendaftarkan anggota: ' + err, 'error');
             } finally {
@@ -586,7 +676,7 @@ function setupEventListeners() {
 
             const type = document.getElementById('editType').value;
             const action = type === 'tx' ? 'editTransaction' : 'editExpense';
-            
+
             const data = {
                 id: document.getElementById('editId').value,
                 date: document.getElementById('editDate').value,
@@ -604,6 +694,16 @@ function setupEventListeners() {
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
                 document.body.style.cursor = 'wait';
 
+                // Handle File Upload in Edit
+                const editFileInput = document.getElementById('editReceipt');
+                if (editFileInput && editFileInput.files.length > 0) {
+                    const file = editFileInput.files[0];
+                    const base64 = await toBase64(file);
+                    const name = `Edit_${type}_${data.id}_${file.name}`;
+                    const uploadRes = await callApi('uploadFile', { base64, name });
+                    if (uploadRes.success) data.receiptUrl = uploadRes.url;
+                }
+
                 const res = await callApi(action, data);
                 showToast(res.message || 'Perubahan disimpan');
                 const modalEdit = document.getElementById('modalEdit');
@@ -615,6 +715,9 @@ function setupEventListeners() {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
                 document.body.style.cursor = 'default';
+                // Reset file input
+                const editFileInput = document.getElementById('editReceipt');
+                if (editFileInput) editFileInput.value = '';
             }
         };
     }
@@ -633,13 +736,102 @@ function setupEventListeners() {
             const newUrl = document.getElementById('inputApiUrl').value.trim();
             localStorage.setItem('gas_api_url', newUrl);
             CONFIG.API_URL = newUrl;
-            showToast('Pengaturan berhasil disimpan');
+            showToast('Pengaturan disimpan');
             checkConnection();
-            
-            // Re-fetch data with new URL
             fetchInitialData();
         };
     }
+
+    // Header Actions
+    const btnLoginH = document.getElementById('btnLoginHeader');
+    if (btnLoginH) btnLoginH.onclick = () => {
+        document.getElementById('modalLogin').classList.add('active');
+    };
+
+    const btnLogoutH = document.getElementById('btnLogoutHeader');
+    if (btnLogoutH) btnLogoutH.onclick = () => {
+        document.getElementById('modalLogoutConfirm').classList.add('active');
+    };
+
+    const btnConfirmLogout = document.getElementById('btnConfirmLogout');
+    if (btnConfirmLogout) {
+        btnConfirmLogout.onclick = () => {
+            performLogout();
+        };
+    }
+
+    // Login Form (Modal)
+    const formLogin = document.getElementById('formLogin');
+    if (formLogin) {
+        formLogin.onsubmit = async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPin').value;
+            handleLoginAttempt(user, pass, e.target);
+        };
+    }
+
+    // Transactions Filter
+    const filterMember = document.getElementById('filterMemberName');
+    if (filterMember) {
+        filterMember.addEventListener('input', () => {
+            renderAllTransactions();
+        });
+    }
+}
+
+async function handleLoginAttempt(user, pass, formElement) {
+    const btn = formElement.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+        
+        const res = await callApi('verifyAdmin', { user, pass });
+        if (res.success) {
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            appData.userRole = 'admin';
+            
+            document.getElementById('modalLogin').classList.remove('active');
+            showToast('Login berhasil! Mode Administrator aktif.');
+            applyRolePermissions();
+            
+            renderMembers();
+            renderAllTransactions();
+            renderAllExpenses();
+        } else {
+            showToast(res.error || 'Username atau Password salah', 'error');
+        }
+    } catch (err) {
+        showToast('Gagal login: ' + err, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        formElement.reset();
+    }
+}
+
+function performLogout() {
+    sessionStorage.removeItem('isAdminLoggedIn');
+    appData.userRole = 'user';
+    
+    // Close modal before reload (though reload will clear it anyway)
+    const modal = document.getElementById('modalLogoutConfirm');
+    if (modal) modal.classList.remove('active');
+    
+    showToast('Logout berhasil. Mode Viewer aktif.');
+    
+    // Reload to fresh state
+    setTimeout(() => {
+        location.reload();
+    }, 500);
+}
+
+function handleLogout() {
+    // Show confirmation modal
+    const modal = document.getElementById('modalLogoutConfirm');
+    if (modal) modal.classList.add('active');
 }
 
 // Helpers
@@ -647,21 +839,35 @@ window.editData = (id, type) => {
     let item;
     if (type === 'tx') item = appData.transactions.find(t => t.ID === id);
     else item = appData.expenses.find(e => e.ID === id);
-    
+
     if (!item) return;
 
     document.getElementById('editId').value = id;
     document.getElementById('editType').value = type;
-    
+
     // Format date for input type="date" (YYYY-MM-DD)
     const dateObj = new Date(item.Date);
     const yyyy = dateObj.getFullYear();
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
     const dd = String(dateObj.getDate()).padStart(2, '0');
-    
+
     document.getElementById('editDate').value = `${yyyy}-${mm}-${dd}`;
     document.getElementById('editAmount').value = item.Amount;
     document.getElementById('editDesc').value = item.Description;
+
+    // Adjust label and visibility for Edit File
+    const receiptContainer = document.getElementById('editReceiptContainer');
+    if (receiptContainer) {
+        const label = receiptContainer.querySelector('label');
+        if (type === 'tx') {
+            label.textContent = 'Ganti Bukti Setor (Opsional)';
+            receiptContainer.style.display = 'block';
+        } else {
+            // For expenses, we might want to handle multiple files, but for now let's just hide or adapt
+            label.textContent = 'Ganti Bukti (Opsional)';
+            receiptContainer.style.display = 'block'; // Allow it for expenses too, maps to receiptUrl/ReceiptDoc
+        }
+    }
 
     const modalEdit = document.getElementById('modalEdit');
     if (modalEdit) modalEdit.classList.add('active');
@@ -669,7 +875,7 @@ window.editData = (id, type) => {
 
 window.deleteData = async (id, type) => {
     if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
-    
+
     showLoading(true);
     try {
         const action = type === 'tx' ? 'deleteTransaction' : 'deleteExpense';
@@ -683,6 +889,24 @@ window.deleteData = async (id, type) => {
     }
 };
 
+window.editMemberData = (id) => {
+    const member = appData.members.find(m => m.ID === id);
+    if (!member) return;
+
+    document.getElementById('memId').value = member.ID;
+    document.getElementById('memName').value = member.Name;
+    document.getElementById('memDept').value = member.Department;
+    document.getElementById('memQuota').value = member.TotalQuota;
+
+    const modalTitle = document.querySelector('#modalMember h3');
+    if (modalTitle) modalTitle.textContent = 'Edit Data Anggota';
+    const btnSubmit = document.querySelector('#formMember .btn-submit');
+    if (btnSubmit) btnSubmit.textContent = 'Simpan Perubahan';
+
+    const modalMem = document.getElementById('modalMember');
+    if (modalMem) modalMem.classList.add('active');
+};
+
 function formatIDR(num) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -694,10 +918,10 @@ function formatIDR(num) {
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
+    return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
     });
 }
 
@@ -723,7 +947,7 @@ function showToast(msg, type = 'success') {
 function showLoading(show) {
     const overlay = document.getElementById('loadingOverlay');
     if (!overlay) return;
-    
+
     if (show) {
         overlay.classList.add('active');
         document.body.style.cursor = 'wait';
