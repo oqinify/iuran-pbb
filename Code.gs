@@ -71,7 +71,7 @@ function initSheets() {
   
   if (!sheets.includes(SHEETS.TRANSACTIONS)) {
     const s = SS.insertSheet(SHEETS.TRANSACTIONS);
-    s.appendRow(['ID', 'MemberID', 'Date', 'Amount', 'Description', 'InvoiceDoc', 'ReceiptDoc', 'Timestamp']);
+    s.appendRow(['ID', 'MemberID', 'Date', 'Amount', 'Description', 'Attachment', 'Timestamp']);
   }
 
   if (!sheets.includes(SHEETS.EXPENSES)) {
@@ -160,7 +160,7 @@ function addTransaction(p) {
   const sheetMem = SS.getSheetByName(SHEETS.MEMBERS);
   const id = 'TX-' + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss");
   
-  sheetTx.appendRow([id, p.memberId, p.date, p.amount, p.description, p.invoiceUrl || '', p.receiptUrl || '', new Date()]);
+  sheetTx.appendRow([id, p.memberId, p.date, p.amount, p.description, p.receiptUrl || '', new Date()]);
   
   const memData = sheetMem.getDataRange().getValues();
   const headers = memData[0];
@@ -210,12 +210,10 @@ function deleteTransaction(p) {
     if (data[i][idCol] === p.id) {
       txAmount = Number(data[i][headers.indexOf('Amount')]) || 0;
       txMemberId = data[i][headers.indexOf('MemberID')];
-      const invoiceUrl = data[i][headers.indexOf('InvoiceDoc')];
-      const receiptUrl = data[i][headers.indexOf('ReceiptDoc')];
+      const attachmentUrl = data[i][attCol];
       
       sheetTx.deleteRow(i + 1);
-      if (invoiceUrl) deleteFileByUrl(invoiceUrl);
-      if (receiptUrl) deleteFileByUrl(receiptUrl);
+      if (attachmentUrl) deleteFileByUrl(attachmentUrl);
       
       // Update Member Balance
       const memData = sheetMem.getDataRange().getValues();

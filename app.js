@@ -155,10 +155,10 @@ function renderDashboard() {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: 'Unknown' };
         const row = `
             <tr>
-                <td>${formatDate(tx.Date)}</td>
-                <td>${member.Name}</td>
-                <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'}</td>
+                <td data-label="Tanggal">${formatDate(tx.Date)}</td>
+                <td data-label="Anggota">${member.Name}</td>
+                <td data-label="Nominal">${formatIDR(tx.Amount)}</td>
+                <td data-label="Keterangan">${tx.Description || '-'}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -201,7 +201,7 @@ function renderAllTransactions() {
     
     appData.transactions.forEach(tx => {
         const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
-        const recLink = tx.ReceiptDoc ? `<a href="${tx.ReceiptDoc}" target="_blank" title="Bukti Setor" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
+        const recLink = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Bukti Setor" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
         
         const actions = `
             <div class="action-buttons">
@@ -211,12 +211,12 @@ function renderAllTransactions() {
         `;
         const row = `
             <tr>
-                <td>${tx.ID}</td>
-                <td>${formatDate(tx.Date)}</td>
-                <td>${member.Name}</td>
-                <td>${formatIDR(tx.Amount)}</td>
-                <td>${tx.Description || '-'}${recLink}</td>
-                <td>${actions}</td>
+                <td data-label="ID">${tx.ID}</td>
+                <td data-label="Tanggal">${formatDate(tx.Date)}</td>
+                <td data-label="Anggota">${member.Name}</td>
+                <td data-label="Nominal">${formatIDR(tx.Amount)}</td>
+                <td data-label="Keterangan">${tx.Description || '-'}${recLink}</td>
+                <td data-label="Aksi">${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -240,11 +240,11 @@ function renderAllExpenses() {
         `;
         const row = `
             <tr>
-                <td>${exp.ID}</td>
-                <td>${formatDate(exp.Date)}</td>
-                <td>${formatIDR(exp.Amount)}</td>
-                <td>${exp.Description || '-'}${invLink}${recLink}</td>
-                <td>${actions}</td>
+                <td data-label="ID">${exp.ID}</td>
+                <td data-label="Tanggal">${formatDate(exp.Date)}</td>
+                <td data-label="Nominal">${formatIDR(exp.Amount)}</td>
+                <td data-label="Keterangan">${exp.Description || '-'}${invLink}${recLink}</td>
+                <td data-label="Aksi">${actions}</td>
             </tr>
         `;
         tbody.innerHTML += row;
@@ -264,12 +264,18 @@ function populateMemberSelect() {
 function switchView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
     
     const viewEl = document.getElementById(viewId + 'View');
-    const navEl = document.querySelector(`[data-view="${viewId}"]`);
+    const navEl = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+    const bottomNavEl = document.querySelector(`.bottom-nav-item[data-view="${viewId}"]`);
     
     if (viewEl) viewEl.classList.add('active');
     if (navEl) navEl.classList.add('active');
+    if (bottomNavEl) bottomNavEl.classList.add('active');
+
+    // Scroll to top when switching view
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Event Listeners
@@ -293,8 +299,10 @@ function setupEventListeners() {
         });
     }
 
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
+    // Sidebar & Bottom Nav
+    const navItems = document.querySelectorAll('.nav-item, .bottom-nav-item');
+    
+    navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             switchView(item.dataset.view);
@@ -303,6 +311,39 @@ function setupEventListeners() {
             }
         });
     });
+
+    // FAB Toggle
+    const fabContainer = document.querySelector('.fab-container');
+    const fabMain = document.getElementById('fabMain');
+    if (fabMain) {
+        fabMain.addEventListener('click', () => {
+            fabContainer.classList.toggle('active');
+        });
+    }
+
+    // Close FAB on click outside
+    document.addEventListener('click', (e) => {
+        if (fabContainer && !fabContainer.contains(e.target) && fabContainer.classList.contains('active')) {
+            fabContainer.classList.remove('active');
+        }
+    });
+
+    // FAB Action Buttons
+    const fabNewTx = document.getElementById('fabNewTx');
+    const fabNewExp = document.getElementById('fabNewExp');
+
+    if (fabNewTx) {
+        fabNewTx.addEventListener('click', () => {
+            document.getElementById('btnNewTx').click();
+            fabContainer.classList.remove('active');
+        });
+    }
+    if (fabNewExp) {
+        fabNewExp.addEventListener('click', () => {
+            document.getElementById('btnNewExp').click();
+            fabContainer.classList.remove('active');
+        });
+    }
 
     // Modals
     const modalTx = document.getElementById('modalTx');
