@@ -46,11 +46,13 @@ function handleApiRequest(e) {
       case 'addTransaction': response = addTransaction(params); break;
       case 'addExpense': response = addExpense(params); break;
       case 'addMember': response = addMember(params); break;
+      case 'editMember': response = editMember(params); break;
       case 'uploadFile': response = uploadFile(params); break;
       case 'deleteTransaction': response = deleteTransaction(params); break;
       case 'editTransaction': response = editTransaction(params); break;
       case 'deleteExpense': response = deleteExpense(params); break;
       case 'editExpense': response = editExpense(params); break;
+      case 'verifyAdmin': response = verifyAdmin(params); break;
       default: response = { error: 'Action not found' };
     }
   } catch (err) {
@@ -207,6 +209,30 @@ function addMember(p) {
   return { success: true, id: id };
 }
 
+function editMember(p) {
+  const sheet = SS.getSheetByName(SHEETS.MEMBERS);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('ID');
+  const targetId = String(p.id || '').trim();
+  
+  for (let i = 1; i < data.length; i++) {
+    const sheetId = String(data[i][idCol] || '').trim();
+    if (sheetId == targetId) {
+      // Columns: ID, Name, Department, TotalQuota, UsedAmount, Balance
+      const q = Number(p.quota) || 0;
+      const used = Number(data[i][headers.indexOf('UsedAmount')]) || 0;
+      
+      sheet.getRange(i + 1, headers.indexOf('Name') + 1).setValue(p.name);
+      sheet.getRange(i + 1, headers.indexOf('Department') + 1).setValue(p.department);
+      sheet.getRange(i + 1, headers.indexOf('TotalQuota') + 1).setValue(q);
+      sheet.getRange(i + 1, headers.indexOf('Balance') + 1).setValue(q - used);
+      return { success: true, message: 'Data anggota diperbarui' };
+    }
+  }
+  return { success: false, error: 'Anggota tidak ditemukan (ID: ' + targetId + ')' };
+}
+
 function deleteTransaction(p) {
   const sheetTx = SS.getSheetByName(SHEETS.TRANSACTIONS);
   const sheetMem = SS.getSheetByName(SHEETS.MEMBERS);
@@ -265,12 +291,19 @@ function editTransaction(p) {
       sheetTx.getRange(i + 1, headers.indexOf('Amount') + 1).setValue(newAmount);
       sheetTx.getRange(i + 1, headers.indexOf('Description') + 1).setValue(p.description);
       
+      if (p.receiptUrl) {
+        const attCol = headers.indexOf('Attachment');
+        const oldUrl = data[i][attCol];
+        sheetTx.getRange(i + 1, attCol + 1).setValue(p.receiptUrl);
+        if (oldUrl) deleteFileByUrl(oldUrl);
+      }
+      
       // Update Member Balance
       if (oldAmount !== newAmount) {
         const memData = sheetMem.getDataRange().getValues();
         const mHeaders = memData[0];
         for (let j = 1; j < memData.length; j++) {
-          if (memData[j][mHeaders.indexOf('ID')] === txMemberId) {
+          if (String(memData[j][mHeaders.indexOf('ID')]).trim() == String(txMemberId).trim()) {
             const uCol = mHeaders.indexOf('UsedAmount');
             const bCol = mHeaders.indexOf('Balance');
             const curUsed = Number(memData[j][uCol]) || 0;
@@ -318,6 +351,13 @@ function editExpense(p) {
       sheet.getRange(i + 1, headers.indexOf('Date') + 1).setValue(p.date);
       sheet.getRange(i + 1, headers.indexOf('Amount') + 1).setValue(p.amount);
       sheet.getRange(i + 1, headers.indexOf('Description') + 1).setValue(p.description);
+      
+      if (p.receiptUrl) {
+        const recCol = headers.indexOf('ReceiptDoc');
+        const oldUrl = data[i][recCol];
+        sheet.getRange(i + 1, recCol + 1).setValue(p.receiptUrl);
+        if (oldUrl) deleteFileByUrl(oldUrl);
+      }
       return { success: true, message: 'Belanja diperbarui' };
     }
   }
@@ -334,4 +374,13 @@ function deleteFileByUrl(url) {
   } catch (err) {
     // Ignore if file doesn't exist or no permission
   }
+}
+
+function verifyAdmin(p) {
+  const ADMIN_USER = "sa";
+  const ADMIN_PASS = "sa";
+  if (p.user === ADMIN_USER && p.pass === ADMIN_PASS) {
+    return { success: true };
+  }
+  return { success: false, error: 'Username atau Password salah' };
 }
