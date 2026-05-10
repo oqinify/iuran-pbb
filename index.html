@@ -29,17 +29,17 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="nav-item" data-view="members">
-                    <i class="fas fa-users"></i>
-                    <span>Anggota</span>
-                </a>
                 <a href="#" class="nav-item" data-view="transactions">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Transaksi</span>
+                    <span>Iuran</span>
                 </a>
                 <a href="#" class="nav-item" data-view="expenses">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Belanja Kantor</span>
+                    <span>Pembayaran</span>
+                </a>
+                <a href="#" class="nav-item" data-view="members">
+                    <i class="fas fa-users"></i>
+                    <span>Anggota</span>
                 </a>
                 <a href="#" class="nav-item" data-view="settings">
                     <i class="fas fa-cog"></i>
@@ -67,18 +67,18 @@
                 <i class="fas fa-home"></i>
                 <span>Beranda</span>
             </a>
+            <a href="#" class="bottom-nav-item" data-view="transactions">
+                <i class="fas fa-history"></i>
+                <span>Iuran</span>
+            </a>
+            <div class="bottom-nav-fab-space"></div>
+            <a href="#" class="bottom-nav-item" data-view="expenses">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Bayar</span>
+            </a>
             <a href="#" class="bottom-nav-item" data-view="members">
                 <i class="fas fa-users"></i>
                 <span>Anggota</span>
-            </a>
-            <div class="bottom-nav-fab-space"></div>
-            <a href="#" class="bottom-nav-item" data-view="transactions">
-                <i class="fas fa-history"></i>
-                <span>Riwayat</span>
-            </a>
-            <a href="#" class="bottom-nav-item" data-view="settings">
-                <i class="fas fa-cog"></i>
-                <span>Profil</span>
             </a>
         </nav>
 
@@ -92,9 +92,9 @@
                     <i class="fas fa-coins"></i>
                     <span class="fab-label">Iuran Baru</span>
                 </button>
-                <button class="fab-option" id="fabNewExp" title="Belanja Baru">
+                <button class="fab-option" id="fabNewExp" title="Bayar Baru">
                     <i class="fas fa-shopping-basket"></i>
-                    <span class="fab-label">Belanja Baru</span>
+                    <span class="fab-label">Bayar Baru</span>
                 </button>
             </div>
         </div>
@@ -114,7 +114,7 @@
                 <div class="actions">
                     <button class="btn btn-secondary" id="btnNewExp">
                         <i class="fas fa-shopping-basket"></i>
-                        <span>Belanja Baru</span>
+                        <span>Bayar Baru</span>
                     </button>
                     <button class="btn btn-primary" id="btnNewTx">
                         <i class="fas fa-plus"></i>
@@ -149,7 +149,7 @@
                         <div class="stat-card rose">
                             <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
                             <div class="stat-info">
-                                <span class="stat-label">Total Belanja</span>
+                                <span class="stat-label">Total Bayar</span>
                                 <div class="stat-value" id="statTotalExpense">Rp 0</div>
                             </div>
                         </div>
@@ -217,7 +217,7 @@
                 <!-- Transactions View -->
                 <div id="transactionsView" class="view">
                     <div class="section-header">
-                        <h2>Semua Transaksi</h2>
+                        <h2>Riwayat Iuran</h2>
                     </div>
                     <div class="table-container full-height">
                         <table id="allTxTable">
@@ -241,7 +241,7 @@
                 <!-- Expenses View -->
                 <div id="expensesView" class="view">
                     <div class="view-header">
-                        <h2>Laporan Belanja Kantor</h2>
+                        <h2>Riwayat Pembayaran</h2>
                         <p class="subtitle">Daftar pengeluaran operasional dari dana iuran.</p>
                     </div>
                     <div class="table-container">
@@ -271,6 +271,21 @@
 
                     <div class="table-container" style="max-width: 800px; margin-top: 24px;">
                         <form id="formSettings" style="padding: 10px;">
+                            <div class="form-group full-width" style="margin-bottom: 24px;">
+                                <label>Tahun Anggaran</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <select id="selectYear" style="padding-left: 48px; width: 100%; background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; height: 50px; color: white; outline: none;">
+                                        <option value="2026">2026</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2024">2024</option>
+                                    </select>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                                    Pilih tahun untuk memfilter seluruh data dashboard dan riwayat.
+                                </p>
+                            </div>
+                            
                             <div class="form-group full-width">
                                 <label>Google Apps Script Web App URL</label>
                                 <div class="input-wrapper">

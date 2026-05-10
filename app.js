@@ -12,16 +12,29 @@ let appData = {
     members: [],
     transactions: [],
     expenses: [],
-    stats: {}
+    stats: {},
+    currentYear: new Date().getFullYear()
 };
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    initYearSelector();
     fetchInitialData();
     setupEventListeners();
     initSettingsView();
     checkConnection();
 });
+
+function initYearSelector() {
+    const selector = document.getElementById('selectYear');
+    if (selector) {
+        selector.value = appData.currentYear;
+        selector.addEventListener('change', (e) => {
+            appData.currentYear = e.target.value;
+            fetchInitialData();
+        });
+    }
+}
 
 function initSettingsView() {
     const input = document.getElementById('inputApiUrl');
@@ -90,7 +103,7 @@ async function callApi(action, data = {}) {
 async function fetchInitialData() {
     showLoading(true);
     try {
-        const data = await callApi('getDashboardData');
+        const data = await callApi('getDashboardData', { year: appData.currentYear });
         appData.stats = data.stats;
         appData.transactions = data.recentTransactions;
         appData.expenses = data.recentExpenses;

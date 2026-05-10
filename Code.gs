@@ -39,10 +39,10 @@ function handleApiRequest(e) {
   let response;
   try {
     switch (action) {
-      case 'getDashboardData': response = getDashboardData(); break;
+      case 'getDashboardData': response = getDashboardData(params); break;
       case 'getMembers': response = getMembers(); break;
-      case 'getTransactions': response = getTransactions(); break;
-      case 'getExpenses': response = getExpenses(); break;
+      case 'getTransactions': response = getTransactions(params ? params.year : null); break;
+      case 'getExpenses': response = getExpenses(params ? params.year : null); break;
       case 'addTransaction': response = addTransaction(params); break;
       case 'addExpense': response = addExpense(params); break;
       case 'addMember': response = addMember(params); break;
@@ -107,10 +107,11 @@ function getMembers() {
   });
 }
 
-function getDashboardData() {
+function getDashboardData(params) {
+  const year = params ? params.year : new Date().getFullYear();
   const members = getMembers();
-  const txs = getTransactions();
-  const exps = getExpenses();
+  const txs = getTransactions(year);
+  const exps = getExpenses(year);
   
   const totalQuota = members.reduce((sum, m) => sum + (Number(m.TotalQuota) || 0), 0);
   const totalUsed = txs.reduce((sum, t) => sum + (Number(t.Amount) || 0), 0);
@@ -131,27 +132,38 @@ function getDashboardData() {
   };
 }
 
-function getTransactions() {
+function getTransactions(year) {
   const sheet = SS.getSheetByName(SHEETS.TRANSACTIONS);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
+  const dateIdx = headers.indexOf('Date');
+  
   return data.map(row => {
     let obj = {};
     headers.forEach((h, i) => obj[h] = row[i]);
     return obj;
+  }).filter(t => {
+    if (!year) return true;
+    const tDate = new Date(t.Date);
+    return tDate.getFullYear() == year;
   });
 }
 
-function getExpenses() {
+function getExpenses(year) {
   const sheet = SS.getSheetByName(SHEETS.EXPENSES);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
+  
   return data.map(row => {
     let obj = {};
     headers.forEach((h, i) => obj[h] = row[i]);
     return obj;
+  }).filter(e => {
+    if (!year) return true;
+    const eDate = new Date(e.Date);
+    return eDate.getFullYear() == year;
   });
 }
 
