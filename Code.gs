@@ -137,7 +137,6 @@ function getTransactions(year) {
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
-  const dateIdx = headers.indexOf('Date');
   
   return data.map(row => {
     let obj = {};

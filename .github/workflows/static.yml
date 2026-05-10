@@ -31,6 +31,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Inject Branch Name
+        run: |
+          sed -i "s/BRANCH: '.*'/BRANCH: '${{ github.ref_name }}'/g" app.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
