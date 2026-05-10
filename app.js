@@ -52,11 +52,16 @@ function initSettingsView() {
 async function checkConnection() {
     const statusEl = document.getElementById('connectionStatus');
     const versionEl = document.getElementById('serverVersion');
-    if (!statusEl) return;
+    const badgeEl = document.getElementById('branchBadge');
     
+    if (badgeEl) {
+        badgeEl.textContent = CONFIG.BRANCH === 'testing' ? 'Beta' : CONFIG.BRANCH;
+        badgeEl.style.display = CONFIG.BRANCH === 'main' ? 'none' : 'inline-block';
+    }
+
     if (CONFIG.IS_GAS_ENV && !CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung via GAS Environment';
-        if (versionEl) versionEl.textContent = `Mode Native GAS | Branch: ${CONFIG.BRANCH}`;
+        if (versionEl) versionEl.textContent = `Mode Native GAS`;
         return;
     }
     
@@ -70,7 +75,7 @@ async function checkConnection() {
         statusEl.textContent = 'Menghubungkan...';
         const data = await callApi('getDashboardData');
         if (data.version) {
-            versionEl.textContent = `v${data.version} | Branch: ${CONFIG.BRANCH}`;
+            versionEl.textContent = `v${data.version}`;
             statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung ke API';
         }
     } catch (err) {
