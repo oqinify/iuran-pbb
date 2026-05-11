@@ -229,11 +229,7 @@
                 <!-- Transactions View -->
                 <div id="transactionsView" class="view">
                     <div class="section-header">
-                        <h2>Riwayat Iuran</h2>
-                        <div class="table-filter">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="filterMemberName" placeholder="Cari nama anggota...">
-                        </div>
+                        <h2>Semua Transaksi</h2>
                     </div>
                     <div class="table-container full-height">
                         <table id="allTxTable">
@@ -511,12 +507,14 @@
             <div class="modal-header" style="justify-content: center;">
                 <h3>Login Administrator</h3>
             </div>
-            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Masukkan username dan PIN Admin.</p>
+            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Masukkan username dan PIN Admin.
+            </p>
             <form id="formLogin">
                 <div class="form-group full-width">
                     <div class="input-wrapper">
                         <i class="fas fa-user"></i>
-                        <input type="text" id="adminUser" placeholder="Username..." required style="margin-bottom: 10px;">
+                        <input type="text" id="adminUser" placeholder="Username..." required
+                            style="margin-bottom: 10px;">
                     </div>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
@@ -536,10 +534,12 @@
             <div class="modal-header" style="justify-content: center;">
                 <h3>Konfirmasi Keluar</h3>
             </div>
-            <p style="color: var(--text-muted); margin-bottom: 24px;">Apakah Anda yakin ingin keluar dari mode Administrator?</p>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Apakah Anda yakin ingin keluar dari mode
+                Administrator?</p>
             <div style="display: flex; gap: 12px;">
                 <button class="btn btn-secondary close-modal" style="flex: 1; justify-content: center;">Batal</button>
-                <button class="btn btn-danger" id="btnConfirmLogout" style="flex: 1; justify-content: center;">Ya, Keluar</button>
+                <button class="btn btn-danger" id="btnConfirmLogout" style="flex: 1; justify-content: center;">Ya,
+                    Keluar</button>
             </div>
         </div>
     </div>
