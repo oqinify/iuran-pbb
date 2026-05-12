@@ -106,8 +106,8 @@ body {
 }
 
 .badge {
-    font-size: 10px;
-    padding: 4px 10px;
+    font-size: 8px;
+    padding: 2px 8px;
     border-radius: 20px;
     background: var(--grad-purple);
     color: white;
