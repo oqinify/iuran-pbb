@@ -130,7 +130,7 @@ async function checkConnection() {
 
     if (CONFIG.IS_GAS_ENV && !CONFIG.API_URL) {
         statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung via GAS Environment';
-        if (versionEl) versionEl.textContent = `Server Version: Mode Native GAS`;
+        if (versionEl) versionEl.innerHTML = `Parallel Environment <br> Mode: Native GAS`;
         return;
     }
 
@@ -144,7 +144,7 @@ async function checkConnection() {
         statusEl.textContent = 'Menghubungkan...';
         const data = await callApi('getDashboardData');
         if (data.version) {
-            versionEl.textContent = `Server Version: v${data.version}`;
+          if (versionEl) versionEl.innerHTML = `Parallel Environment <br> v${data.version || '3.2'}`;
             statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--accent-success)"></i> Terhubung ke API';
         }
     } catch (err) {
