@@ -7,7 +7,8 @@ const getUrlParam = (name) => new URLSearchParams(window.location.search).get(na
 const CONFIG = {
     API_URL: localStorage.getItem('gas_api_url') || '',
     IS_GAS_ENV: typeof google !== 'undefined' && google.script && google.script.run,
-    BRANCH: (getUrlParam('branch') || 'main').toLowerCase() // Default ALWAYS to main
+    // Auto-detect branch: parameter first, then path-based, then default to main
+    BRANCH: (getUrlParam('branch') || (window.location.pathname.includes('/testing') ? 'testing' : 'main')).toLowerCase()
 };
 
 // State Management
