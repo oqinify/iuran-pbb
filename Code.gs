@@ -129,6 +129,7 @@ function getDashboardData(params) {
       netBalance: totalUsed - totalExpense,
       totalBalance: totalQuota - totalUsed
     },
+    members: members,
     recentTransactions: txs.slice(-5).reverse(),
     recentExpenses: exps.slice(-5).reverse()
   };

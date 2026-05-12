@@ -184,13 +184,16 @@ async function fetchInitialData() {
     showLoading(true);
     try {
         const data = await callApi('getDashboardData', { year: appData.currentYear });
+        appData.members = data.members || [];
         appData.stats = data.stats;
         appData.transactions = data.recentTransactions;
         appData.expenses = data.recentExpenses;
+        
         renderDashboard();
+        renderMembers();
+        populateMemberSelect();
 
-        // Background fetch
-        fetchMembers();
+        // Background fetch for full history
         fetchTransactions(appData.currentYear);
         fetchExpenses(appData.currentYear);
     } catch (err) {
@@ -245,7 +248,7 @@ function renderDashboard() {
     tbody.innerHTML = '';
 
     appData.transactions.slice(0, 5).forEach(tx => {
-        const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: 'Unknown' };
+        const member = getMember(tx.MemberID);
         const row = `
             <tr>
                 <td data-label="Tanggal">${formatDate(tx.Date)}</td>
@@ -300,12 +303,12 @@ function renderAllTransactions() {
     const filterValue = document.getElementById('filterMemberName')?.value.toLowerCase() || '';
 
     const filteredTxs = appData.transactions.filter(tx => {
-        const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
+        const member = getMember(tx.MemberID);
         return member.Name.toLowerCase().includes(filterValue);
     });
 
     filteredTxs.forEach(tx => {
-        const member = appData.members.find(m => m.ID === tx.MemberID) || { Name: tx.MemberID };
+        const member = getMember(tx.MemberID);
         const recLink = tx.Attachment ? `<a href="${tx.Attachment}" target="_blank" title="Bukti Setor" style="margin-left:8px; color:var(--accent-success)"><i class="fas fa-receipt"></i></a>` : '';
 
         const actions = `
@@ -491,7 +494,18 @@ function setupEventListeners() {
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.classList.remove('active');
+                const form = modal.querySelector('form');
+                if (form) form.reset();
+            } else {
+                document.querySelectorAll('.modal').forEach(m => {
+                    m.classList.remove('active');
+                    const form = m.querySelector('form');
+                    if (form) form.reset();
+                });
+            }
         };
     });
 
@@ -890,8 +904,8 @@ window.deleteData = async (id, type) => {
 };
 
 window.editMemberData = (id) => {
-    const member = appData.members.find(m => m.ID === id);
-    if (!member) return;
+    const member = getMember(id);
+    if (!member || member.ID === '') return;
 
     document.getElementById('memId').value = member.ID;
     document.getElementById('memName').value = member.Name;
@@ -906,6 +920,12 @@ window.editMemberData = (id) => {
     const modalMem = document.getElementById('modalMember');
     if (modalMem) modalMem.classList.add('active');
 };
+
+function getMember(id) {
+    if (!id) return { Name: 'Unknown', ID: '', Department: '-' };
+    const member = appData.members.find(m => String(m.ID).trim() === String(id).trim());
+    return member || { Name: id, ID: id, Department: '-' };
+}
 
 function formatIDR(num) {
     return new Intl.NumberFormat('id-ID', {

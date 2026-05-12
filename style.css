@@ -88,17 +88,6 @@ body {
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 1050;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
 .sidebar.active~.sidebar-overlay {
     display: block;
     opacity: 1;
@@ -389,7 +378,7 @@ td:last-child {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
 }
 
 .modal.active {
@@ -537,7 +526,7 @@ select option {
     border-radius: 16px;
     font-weight: 600;
     font-size: 14px;
-    z-index: 10000;
+    z-index: 5000;
     display: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
     animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -732,7 +721,7 @@ select option {
     background: var(--accent-error);
     color: var(--text-main);
     border-color: var(--accent-error);
-    transform: rotate(90deg);
+
 }
 
 /* Loading Overlay - Modern Spinner */
@@ -744,7 +733,7 @@ select option {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 4000;
     flex-direction: column;
 }
 
@@ -791,7 +780,7 @@ select option {
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    z-index: 950;
+    z-index: 1050;
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -981,8 +970,30 @@ select option {
     }
 
     .top-bar .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .top-bar .actions .btn span {
         display: none;
-        /* Hidden on mobile, moved to FAB */
+    }
+
+    .top-bar .actions .btn {
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .top-bar .actions .btn i {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    /* Hide redundant admin buttons in top bar on mobile as they're in the FAB */
+    .top-bar .actions .admin-only {
+        display: none !important;
     }
 
     .bottom-nav {
