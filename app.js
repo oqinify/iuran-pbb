@@ -195,7 +195,7 @@ async function fetchInitialData() {
         appData.stats = data.stats;
         appData.transactions = data.recentTransactions;
         appData.expenses = data.recentExpenses;
-        
+
         renderDashboard();
         renderMembers();
         populateMemberSelect();
@@ -266,6 +266,136 @@ function renderDashboard() {
         `;
         tbody.innerHTML += row;
     });
+
+    renderCharts();
+}
+
+let mainChart = null;
+function renderCharts() {
+    const ctxMain = document.getElementById('mainChart');
+    const container = document.getElementById('progressStatsContainer');
+    
+    if (!ctxMain || !container) return;
+
+    // --- 1. Render Line Chart ---
+    if (mainChart) mainChart.destroy();
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthlyIncome = new Array(12).fill(0);
+    const monthlyExpense = new Array(12).fill(0);
+
+    appData.transactions.forEach(tx => {
+        const date = new Date(tx.Date);
+        if (!isNaN(date)) monthlyIncome[date.getMonth()] += tx.Amount;
+    });
+
+    appData.expenses.forEach(exp => {
+        const date = new Date(exp.Date);
+        if (!isNaN(date)) monthlyExpense[date.getMonth()] += exp.Amount;
+    });
+
+    const isDark = document.body.classList.contains('dark-theme');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+    mainChart = new Chart(ctxMain, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Iuran Masuk',
+                    data: monthlyIncome,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#a855f7'
+                },
+                {
+                    label: 'Pengeluaran',
+                    data: monthlyExpense,
+                    borderColor: '#f43f5e',
+                    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#f43f5e'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: gridColor },
+                    ticks: {
+                        color: textColor,
+                        callback: value => 'Rp ' + (value / 1000) + 'k'
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: textColor }
+                }
+            }
+        }
+    });
+
+    // Custom Legend for Line Chart
+    const legendContainer = document.getElementById('chartLegend');
+    if (legendContainer) {
+        legendContainer.innerHTML = `
+            <div style="display: flex; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: ${textColor}">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #a855f7"></div> Iuran
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: ${textColor}">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #f43f5e"></div> Bayar
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 2. Render Progress Bars ---
+    const stats = appData.stats;
+    if (!stats) return;
+
+    const baseline = stats.totalQuota || 1;
+    const metrics = [
+        { label: 'Iuran Terkumpul', value: stats.totalUsed, icon: 'fas fa-receipt', color: 'var(--grad-blue)', perc: (stats.totalUsed / baseline * 100).toFixed(1) },
+        { label: 'Pengeluaran', value: stats.totalExpense, icon: 'fas fa-shopping-cart', color: 'var(--grad-rose)', perc: (stats.totalExpense / baseline * 100).toFixed(1) },
+        { label: 'Saldo Kas', value: stats.netBalance, icon: 'fas fa-wallet', color: 'var(--grad-green)', perc: (stats.netBalance / baseline * 100).toFixed(1) }
+    ];
+
+    container.innerHTML = metrics.map(m => `
+        <div class="progress-item">
+            <div class="progress-info">
+                <div class="progress-label">
+                    <i class="${m.icon}" style="color: ${m.color.split(' ')[0]}"></i>
+                    <span>${m.label}</span>
+                </div>
+                <div class="progress-value">${m.perc}%</div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: 0%; background: ${m.color}" data-width="${m.perc}%"></div>
+            </div>
+        </div>
+    `).join('');
+
+    setTimeout(() => {
+        container.querySelectorAll('.progress-fill').forEach(bar => {
+            bar.style.width = bar.getAttribute('data-width');
+        });
+    }, 100);
 }
 
 function renderMembers() {
@@ -808,16 +938,16 @@ async function handleLoginAttempt(user, pass, formElement) {
     try {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
-        
+
         const res = await callApi('verifyAdmin', { user, pass });
         if (res.success) {
             sessionStorage.setItem('isAdminLoggedIn', 'true');
             appData.userRole = 'admin';
-            
+
             document.getElementById('modalLogin').classList.remove('active');
             showToast('Login berhasil! Mode Administrator aktif.');
             applyRolePermissions();
-            
+
             renderMembers();
             renderAllTransactions();
             renderAllExpenses();
@@ -836,13 +966,13 @@ async function handleLoginAttempt(user, pass, formElement) {
 function performLogout() {
     sessionStorage.removeItem('isAdminLoggedIn');
     appData.userRole = 'user';
-    
+
     // Close modal before reload (though reload will clear it anyway)
     const modal = document.getElementById('modalLogoutConfirm');
     if (modal) modal.classList.remove('active');
-    
+
     showToast('Logout berhasil. Mode Viewer aktif.');
-    
+
     // Reload to fresh state
     setTimeout(() => {
         location.reload();

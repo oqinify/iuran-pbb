@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=3.1">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="dark-theme">
@@ -170,6 +171,26 @@
                             <div class="stat-info">
                                 <span class="stat-label">Saldo Kas</span>
                                 <div class="stat-value" id="statNetBalance">Rp 0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-card main-chart">
+                            <div class="chart-header">
+                                <h3>Analisis Iuran & Pembayaran</h3>
+                                <div class="chart-legend" id="chartLegend"></div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="mainChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card side-chart">
+                            <div class="chart-header">
+                                <h3>Analisis Prosentase</h3>
+                            </div>
+                            <div class="progress-stats-container" id="progressStatsContainer">
+                                <!-- Data injected by JS -->
                             </div>
                         </div>
                     </div>
