@@ -124,7 +124,7 @@ async function checkConnection() {
     const badgeEl = document.getElementById('branchBadge');
 
     if (badgeEl) {
-        badgeEl.textContent = CONFIG.BRANCH === 'testing' ? 'Beta' : CONFIG.BRANCH;
+        badgeEl.textContent = CONFIG.BRANCH === 'testing' ? 'Alpha' : CONFIG.BRANCH;
         badgeEl.style.display = CONFIG.BRANCH === 'main' ? 'none' : 'inline-block';
     }
 
