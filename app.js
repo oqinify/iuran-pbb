@@ -7,8 +7,13 @@ const getUrlParam = (name) => new URLSearchParams(window.location.search).get(na
 const CONFIG = {
     API_URL: localStorage.getItem('gas_api_url') || '',
     IS_GAS_ENV: typeof google !== 'undefined' && google.script && google.script.run,
-    BRANCH: getUrlParam('branch') || 'main' // Defaults to main, use ?branch=testing for beta
+    BRANCH: 'main' // Auto-injected by GitHub Actions
 };
+
+// Allow URL override (?branch=testing)
+const urlBranch = getUrlParam('branch');
+if (urlBranch) CONFIG.BRANCH = urlBranch.toLowerCase();
+else CONFIG.BRANCH = CONFIG.BRANCH.toLowerCase();
 
 // State Management
 let appData = {
