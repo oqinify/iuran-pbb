@@ -218,16 +218,14 @@ body {
     font-family: 'Outfit', sans-serif;
 }
 
-h1 {
-    font-size: 36px;
+h1,
+h2 {
+    font-size: 28px;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
-.subtitle {
-    color: var(--text-muted);
-    font-size: 16px;
-}
+
 
 /* Dashboard Grid Layouts */
 .stats-grid {
