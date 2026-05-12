@@ -2,10 +2,12 @@
  * Configuration for External Hosting (GitHub Pages, etc.)
  * If you host on GitHub Pages, paste your Google Apps Script Web App URL here.
  */
+const getUrlParam = (name) => new URLSearchParams(window.location.search).get(name);
+
 const CONFIG = {
     API_URL: localStorage.getItem('gas_api_url') || '',
     IS_GAS_ENV: typeof google !== 'undefined' && google.script && google.script.run,
-    BRANCH: 'testing' // Manual indicator
+    BRANCH: getUrlParam('branch') || 'main' // Defaults to main, use ?branch=testing for beta
 };
 
 // State Management
