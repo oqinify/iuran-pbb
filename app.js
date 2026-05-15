@@ -983,7 +983,7 @@ function performLogout() {
     // Reload to fresh state
     setTimeout(() => {
         location.reload();
-    }, 500);
+    }, 1500);
 }
 
 function handleLogout() {
@@ -1105,7 +1105,7 @@ function showToast(msg, type = 'success') {
     toast.style.background = type === 'error' ? 'var(--accent-error)' : 'var(--accent-success)';
     toast.style.color = '#fff';
     toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
 }
 
 function showLoading(show) {
